@@ -9,7 +9,9 @@ const wss = new WebSocket.Server({ server });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ==========================================
 // لوحة التحكم السحابية (Web Dashboard)
+// ==========================================
 app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -17,78 +19,146 @@ app.get('/', (req, res) => {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>لوحة التحكم - NINJA COMMANDER</title>
+            <title>SAMURAI COMMANDER - Data Center</title>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
             <style>
-                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; }
-                .container { max-width: 600px; margin: 0 auto; background: #1e293b; padding: 30px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); border: 1px solid #334155;}
-                h1 { color: #38bdf8; text-align: center; font-size: 24px; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-top: 0; }
-                .form-group { margin-bottom: 15px; }
-                label { display: block; margin-bottom: 5px; font-weight: bold; color: #94a3b8; font-size: 14px;}
-                select, input { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 15px; box-sizing: border-box; }
-                select:focus, input:focus { outline: none; border-color: #38bdf8; }
-                button { width: 100%; padding: 14px; margin-top: 15px; border-radius: 6px; border: none; background: #2563eb; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-                button:hover { background: #1d4ed8; }
-                .log { background: #000; padding: 15px; margin-top: 20px; height: 180px; overflow-y: auto; border-radius: 6px; font-family: monospace; font-size: 13px; color: #10b981; border: 1px solid #334155;}
-                .stats { text-align: center; margin-bottom: 20px; font-size: 14px; color: #cbd5e1; background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 6px; }
+                :root {
+                    --bg-base: #09090b;
+                    --bg-surface: #18181b;
+                    --bg-input: #000000;
+                    --border-light: #27272a;
+                    --border-focus: #52525b;
+                    --text-main: #fafafa;
+                    --text-muted: #a1a1aa;
+                    --accent: #ffffff;
+                    --accent-hover: #e4e4e7;
+                }
+                body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg-base); color: var(--text-main); padding: 30px 15px; margin: 0; }
+                .container { max-width: 600px; margin: 0 auto; background: var(--bg-surface); padding: 30px; border-radius: 16px; border: 1px solid var(--border-light); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);}
+                header { text-align: center; margin-bottom: 30px; }
+                h1 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: 3px; }
+                .subtitle { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-top: 5px; text-transform: uppercase; }
+                .stats { text-align: center; margin-bottom: 25px; font-size: 13px; color: #22c55e; background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: 10px; border: 1px solid rgba(34, 197, 94, 0.2); font-weight: 600;}
+                .form-group { margin-bottom: 16px; }
+                label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 500; color: var(--text-muted); }
+                select { width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text-main); font-size: 14px; outline: none; transition: 0.2s; appearance: none; }
+                select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 1px var(--border-focus); }
+                button { width: 100%; padding: 16px; margin-top: 20px; border-radius: 10px; border: none; background: var(--accent); color: #000; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+                button:hover { background: var(--accent-hover); transform: translateY(-1px); }
+                .log { background: var(--bg-input); padding: 15px; margin-top: 25px; height: 160px; overflow-y: auto; border-radius: 10px; font-family: monospace; font-size: 12px; color: #22c55e; border: 1px solid var(--border-light); line-height: 1.6;}
             </style>
         </head>
         <body>
             <div class="container">
-                <h1>🔥 NINJA SYSTEM CORE - COMMANDER 🔥</h1>
-                <div class="stats" id="stats">📡 عدد المتصفحات المتصلة حالياً: جاري التحميل...</div>
+                <header>
+                    <h1>SAMURAI</h1>
+                    <div class="subtitle">Cloud Command Center</div>
+                </header>
+                
+                <div class="stats" id="stats">📡 جاري الاتصال بالمتصفحات...</div>
                 
                 <div class="form-group">
-                    <label>📍 اختر المدينة:</label>
-                    <select id="city">
-                        <option value="Casablanca">الدار البيضاء (Casablanca)</option>
-                        <option value="Rabat">الرباط (Rabat)</option>
-                        <option value="Tangier">طنجة (Tangier)</option>
-                        <option value="Agadir">أكادير (Agadir)</option>
-                        <option value="Tetouan">تطوان (Tetouan)</option>
-                        <option value="Nador">الناظور (Nador)</option>
-                    </select>
+                    <label>المركز (Location)</label>
+                    <select id="city"></select>
                 </div>
 
                 <div class="form-group">
-                    <label>📑 نوع الفيزا الأساسي (Visa Type):</label>
-                    <select id="visaType">
-                        <option value="Schengen Visa">Schengen Visa</option>
-                        <option value="National Visa">National Visa</option>
-                    </select>
+                    <label>نوع التأشيرة (Visa Type)</label>
+                    <select id="visaType"></select>
                 </div>
 
                 <div class="form-group">
-                    <label>📝 النوع الفرعي (Sub Type):</label>
-                    <input type="text" id="subType" value="Schengen Visa" placeholder="مثال: Casa 1 أو Work Visa">
+                    <label>الفئة الفرعية (Visa Sub Type)</label>
+                    <select id="subType"></select>
                 </div>
 
                 <div class="form-group">
-                    <label>⭐ الفئة (Category):</label>
-                    <select id="category">
-                        <option value="Normal">Normal</option>
-                        <option value="Premium">Premium</option>
-                        <option value="Prime Time">Prime Time</option>
-                    </select>
+                    <label>الفئة (Category)</label>
+                    <select id="category"></select>
                 </div>
 
-                <button onclick="sendCommand()">🚀 إرسال الإشارة لجميع المتصفحات</button>
+                <button onclick="sendCommand()">إرسال الإشارة للعملاء النشطين 🚀</button>
 
                 <div class="log" id="log">
-                    > النظام جاهز بانتظار أوامرك...<br>
+                    > نظام Samurai السحابي جاهز لتلقي الأوامر...<br>
                 </div>
             </div>
 
             <script>
-                // جلب عدد المتصفحات المتصلة كل 3 ثواني
+                // 1. استيراد القواعد والبيانات من الإضافة الخاصة بك
+                const N_LOCATIONS = ["Rabat","Casablanca","Tangier","Agadir","Tetouan","Nador"];
+                const N_VISATYPES = ["National Visa","Schengen Visa"];
+                const N_CATEGORIES = ["Normal","Premium","Prime Time"];
+                const N_SUBTYPES = [
+                    "Schengen Visa", "Student Visa", "Family Reunification Visa", 
+                    "National Visa", "Work Visa", "Casa 1", "Casa 2", 
+                    "Students Less than 6 Months (SSU).", "Non-university students", 
+                    "Schengen Visa – With Prior Schengen Visa 2023"
+                ];
+
+                // 2. دوال المنطق الذكي لتغيير القوائم بناءً على اختيار المدينة
+                function fillSelect(id, items, selectedValue) {
+                    const select = document.getElementById(id);
+                    select.innerHTML = "";
+                    items.forEach(v => {
+                        const opt = document.createElement("option");
+                        opt.value = v;
+                        opt.textContent = v;
+                        select.appendChild(opt);
+                    });
+                    if(selectedValue && items.includes(selectedValue)) select.value = selectedValue;
+                }
+
+                function getSubtypes(location, visatype) {
+                    if (location === "Casablanca") {
+                        if (visatype === "Schengen Visa") return ["Casa 1", "Casa 2"];
+                        if (visatype === "National Visa") return ["Work Visa", "Student Visa", "Family Reunification Visa", "National Visa"];
+                    }
+                    if (visatype === "Schengen Visa") {
+                        if (location === "Rabat") return ["Schengen Visa", "Schengen Visa – With Prior Schengen Visa 2023"];
+                        return ["Schengen Visa"]; 
+                    }
+                    if (visatype === "National Visa") {
+                        if (location === "Tangier") return ["Students Less than 6 Months (SSU)."];
+                        if (location === "Agadir") return ["Non-university students"];
+                        return ["National Visa", "Student Visa", "Family Reunification Visa", "Work Visa"]; 
+                    }
+                    return N_SUBTYPES; 
+                }
+
+                function updateSubTypes() {
+                    const loc = document.getElementById("city").value;
+                    const vType = document.getElementById("visaType").value;
+                    const available = getSubtypes(loc, vType);
+                    let target = available.includes("Schengen Visa") ? "Schengen Visa" : available[0];
+                    fillSelect("subType", available, target);
+                }
+
+                function updateVisaTypes() {
+                    const loc = document.getElementById("city").value;
+                    const autoSchengen = ["Rabat", "Tangier", "Tetouan", "Agadir", "Nador"];
+                    let targetVisa = autoSchengen.includes(loc) ? "Schengen Visa" : "Schengen Visa";
+                    fillSelect("visaType", N_VISATYPES, targetVisa);
+                    updateSubTypes();
+                }
+
+                // 3. تهيئة الواجهة وتشغيل المنطق
+                fillSelect("city", N_LOCATIONS, "Casablanca");
+                fillSelect("category", N_CATEGORIES, "Normal");
+                updateVisaTypes();
+
+                document.getElementById("city").addEventListener("change", updateVisaTypes);
+                document.getElementById("visaType").addEventListener("change", updateSubTypes);
+
+                // 4. نظام الاتصال والإرسال للسيرفر
                 function fetchStats() {
                     fetch('/api/stats').then(r => r.json()).then(data => {
-                        document.getElementById('stats').innerText = '📡 عدد المتصفحات المتصلة للإطلاق: ' + data.connections;
-                    }).catch(e => console.log(e));
+                        document.getElementById('stats').innerText = '📡 المتصفحات المتصلة حالياً: ' + data.connections;
+                    }).catch(e => {});
                 }
                 setInterval(fetchStats, 3000);
                 fetchStats();
 
-                // دالة إرسال الأمر
                 function sendCommand() {
                     const payload = {
                         action: "CHANGE_PROFILE",
@@ -106,12 +176,12 @@ app.get('/', (req, res) => {
                         body: JSON.stringify(payload)
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
-                        log.innerHTML += '✅ [تم الإرسال لـ '+ data.clients +' متصفح]: ' + payload.city + ' - ' + payload.visaType + '<br>';
-                        log.scrollTop = log.scrollHeight; // النزول لأسفل السجل
-                        document.querySelector('button').innerText = '🚀 إرسال الإشارة لجميع المتصفحات';
+                        log.innerHTML += '✅ [تم البث لـ '+ data.clients +' متصفح]: ' + payload.city + ' - ' + payload.visaType + ' - ' + payload.subType + '<br>';
+                        log.scrollTop = log.scrollHeight; 
+                        document.querySelector('button').innerText = 'إرسال الإشارة للعملاء النشطين 🚀';
                     }).catch(err => {
                         alert('❌ خطأ في الاتصال بالسيرفر');
-                        document.querySelector('button').innerText = '🚀 إرسال الإشارة لجميع المتصفحات';
+                        document.querySelector('button').innerText = 'إرسال الإشارة للعملاء النشطين 🚀';
                     });
                 }
             </script>
@@ -120,12 +190,13 @@ app.get('/', (req, res) => {
     `);
 });
 
-// مسار للحصول على إحصائيات الاتصال
+// ==========================================
+// نظام الـ WebSockets لاستقبال وإرسال الأوامر
+// ==========================================
 app.get('/api/stats', (req, res) => {
     res.json({ connections: wss.clients.size });
 });
 
-// مسار لاستقبال الأوامر من لوحة التحكم وإذاعتها للجميع
 app.post('/api/broadcast', (req, res) => {
     const payload = req.body;
     let count = 0;
@@ -135,16 +206,14 @@ app.post('/api/broadcast', (req, res) => {
             count++;
         }
     });
-    console.log("Broadcast sent to", count, "clients:", payload);
+    console.log("Broadcast Command:", payload);
     res.json({ success: true, clients: count });
 });
 
-// إشعار عند اتصال متصفح جديد
 wss.on('connection', (ws) => {
-    console.log("[+] متصفح جديد اتصل بنظام WebSocket.");
+    console.log("[+] متصفح جديد متصل الآن.");
 });
 
-// إبقاء الاتصال حياً (Keep-Alive) لمنع الفصل
 setInterval(() => {
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
@@ -155,5 +224,5 @@ setInterval(() => {
 
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
-    console.log('🚀 Commander Server is running on port ' + PORT);
+    console.log('🚀 Samurai Commander is running on port ' + PORT);
 });
