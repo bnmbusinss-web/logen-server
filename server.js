@@ -83,13 +83,13 @@ app.get('/', (req, res) => {
                 <button onclick="sendCommand()">إرسال أمر التشغيل (العميل النشط) 🚀</button>
 
                 <div class="form-group" style="margin-top: 25px; border-top: 1px solid var(--border-light); padding-top: 20px;">
-                    <label style="color: #38bdf8; font-weight: 700; font-size: 14px;">📦 نظام التوزيع العادل (Round-Robin)</label>
+                    <label style="color: #38bdf8; font-weight: 700; font-size: 14px;">📦 نظام التوزيع الصارم (إيميل واحد لكل حاسوب)</label>
                     <input type="file" id="bulkUpload" accept=".txt,.csv" style="display: none;" onchange="handleFileUpload(event)">
                     <button class="btn-outline" onclick="document.getElementById('bulkUpload').click()">
                         📂 اختيار ملف الحسابات (TXT/CSV)
                     </button>
                     <button class="btn-green" id="distributeBtn" style="display: none;" onclick="distributeAccounts()">
-                        🎯 توزيع الحسابات على الحواسيب بالتساوي
+                        🎯 توزيع الحسابات الصارم (1 حساب/حاسوب)
                     </button>
                 </div>
 
@@ -156,7 +156,7 @@ app.get('/', (req, res) => {
                 document.getElementById("city").addEventListener("change", updateVisaTypes);
                 document.getElementById("visaType").addEventListener("change", updateSubTypes);
 
-                // إحصائيات دقيقة
+                // إحصائيات דقيقة
                 let currentStats = { total: 0, details: {} };
                 function updateStatsUI() {
                     const selectedPc = document.getElementById('targetPc').value.toLowerCase();
@@ -223,7 +223,7 @@ app.get('/', (req, res) => {
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
                         if(data.success) {
-                            log.innerHTML += '📦 [اكتمل التوزيع العادل]: تم تقسيم ' + data.totalAccounts + ' حساب على ' + data.distributedTo + ' حواسيب بنجاح!<br>';
+                            log.innerHTML += '📦 [اكتمل التوزيع الصارم]: تم إرسال ' + data.distributedTo + ' حساب لـ ' + data.distributedTo + ' حواسيب (إيميل واحد لكل حاسوب)!<br>';
                             window.uploadedAccounts = [];
                             document.getElementById('distributeBtn').style.display = 'none';
                             document.getElementById('bulkUpload').value = '';
@@ -231,7 +231,7 @@ app.get('/', (req, res) => {
                             log.innerHTML += '❌ [خطأ]: ' + data.error + '<br>';
                         }
                         log.scrollTop = log.scrollHeight; 
-                        document.getElementById('distributeBtn').innerText = '🎯 توزيع الحسابات على الحواسيب بالتساوي';
+                        document.getElementById('distributeBtn').innerText = '🎯 توزيع الحسابات الصارم (1 حساب/حاسوب)';
                     }).catch(err => { alert('❌ خطأ في الاتصال'); });
                 }
 
@@ -249,7 +249,6 @@ app.get('/', (req, res) => {
     `);
 });
 
-// 🔴 API حساب الإحصائيات (تم تصحيحها لتعُدّ متصفحات كل حاسوب بدقة)
 app.get('/api/stats', (req, res) => {
     let stats = { total: 0, details: {} };
     wss.clients.forEach(client => {
@@ -274,10 +273,12 @@ app.post('/api/broadcast', (req, res) => {
     res.json({ success: true, clients: count });
 });
 
+// 🔴 خوارزمية التوزيع الصارم: إيميل واحد كحد أقصى لكل حاسوب
 app.post('/api/bulk-distribute', (req, res) => {
     const { accounts, city, visaType, subType, category, targetPc } = req.body;
     const target = targetPc ? targetPc.toLowerCase() : "all";
     
+    // إحضار نسخة واحدة من كل حاسوب متصل لتجنب الإرسال المزدوج
     let uniquePCs = {};
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN && client.pcId && client.pcId !== "unknown") {
@@ -294,22 +295,21 @@ app.post('/api/bulk-distribute', (req, res) => {
         return res.json({ success: false, error: "لا يوجد حواسيب مستهدفة متصلة ومعروفة الهوية حالياً." });
     }
 
-    const chunks = Array.from({ length: numClients }, () => []);
-    accounts.forEach((acc, index) => {
-        chunks[index % numClients].push(acc);
-    });
-
+    let distributedCount = 0;
+    
+    // إعطاء كل حاسوب إيميلاً واحداً فقط من الملف
     for (let i = 0; i < numClients; i++) {
-        if (chunks[i].length > 0) {
+        if (accounts[i]) { 
             eligibleClients[i].send(JSON.stringify({
                 action: "BULK_ADD_PROFILES",
-                profiles: chunks[i],
+                profiles: [ accounts[i] ], // 👈 هنا السر: إرسال حساب واحد فقط
                 city, visaType, subType, category
             }));
+            distributedCount++;
         }
     }
 
-    res.json({ success: true, distributedTo: numClients, totalAccounts: accounts.length });
+    res.json({ success: true, distributedTo: distributedCount, totalAccounts: distributedCount });
 });
 
 wss.on('connection', (ws) => {
