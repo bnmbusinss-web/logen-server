@@ -9,9 +9,6 @@ const wss = new WebSocket.Server({ server });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ==========================================
-// لوحة التحكم السحابية (Web Dashboard)
-// ==========================================
 app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -22,17 +19,7 @@ app.get('/', (req, res) => {
             <title>SAMURAI COMMANDER - Data Center</title>
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
             <style>
-                :root {
-                    --bg-base: #09090b;
-                    --bg-surface: #18181b;
-                    --bg-input: #000000;
-                    --border-light: #27272a;
-                    --border-focus: #52525b;
-                    --text-main: #fafafa;
-                    --text-muted: #a1a1aa;
-                    --accent: #ffffff;
-                    --accent-hover: #e4e4e7;
-                }
+                :root { --bg-base: #09090b; --bg-surface: #18181b; --bg-input: #000000; --border-light: #27272a; --border-focus: #52525b; --text-main: #fafafa; --text-muted: #a1a1aa; --accent: #ffffff; --accent-hover: #e4e4e7; }
                 body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg-base); color: var(--text-main); padding: 30px 15px; margin: 0; }
                 .container { max-width: 600px; margin: 0 auto; background: var(--bg-surface); padding: 30px; border-radius: 16px; border: 1px solid var(--border-light); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);}
                 header { text-align: center; margin-bottom: 30px; }
@@ -56,6 +43,21 @@ app.get('/', (req, res) => {
                 </header>
                 
                 <div class="stats" id="stats">📡 جاري الاتصال بالمتصفحات...</div>
+
+                <div class="form-group">
+                    <label>💻 الحاسوب المستهدف (Target PC)</label>
+                    <select id="targetPc" style="border-color: #38bdf8;">
+                        <option value="ALL">🌐 إرسال إلى الجميع</option>
+                        <option value="zakaria">💻 حاسوب Zakaria</option>
+                        <option value="achraf">💻 حاسوب Achraf</option>
+                        <option value="najwa">💻 حاسوب Najwa</option>
+                        <option value="mohamed">💻 حاسوب Mohamed</option>
+                        <option value="imane">💻 حاسوب Imane</option>
+                        <option value="wasima">💻 حاسوب Wasima</option>
+                        <option value="najlae">💻 حاسوب Najlae</option>
+                        <option value="ismaile">💻 حاسوب Ismaile</option>
+                    </select>
+                </div>
                 
                 <div class="form-group">
                     <label>المركز (Location)</label>
@@ -77,26 +79,19 @@ app.get('/', (req, res) => {
                     <select id="category"></select>
                 </div>
 
-                <button onclick="sendCommand()">إرسال الإشارة للعملاء النشطين 🚀</button>
+                <button onclick="sendCommand()">إرسال الإشارة 🚀</button>
 
                 <div class="log" id="log">
-                    > نظام Samurai السحابي جاهز لتلقي الأوامر...<br>
+                    > نظام Samurai جاهز لتلقي الأوامر وتوزيعها...<br>
                 </div>
             </div>
 
             <script>
-                // 1. استيراد القواعد والبيانات من الإضافة الخاصة بك
                 const N_LOCATIONS = ["Rabat","Casablanca","Tangier","Agadir","Tetouan","Nador"];
                 const N_VISATYPES = ["National Visa","Schengen Visa"];
                 const N_CATEGORIES = ["Normal","Premium","Prime Time"];
-                const N_SUBTYPES = [
-                    "Schengen Visa", "Student Visa", "Family Reunification Visa", 
-                    "National Visa", "Work Visa", "Casa 1", "Casa 2", 
-                    "Students Less than 6 Months (SSU).", "Non-university students", 
-                    "Schengen Visa – With Prior Schengen Visa 2023"
-                ];
+                const N_SUBTYPES = ["Schengen Visa", "Student Visa", "Family Reunification Visa", "National Visa", "Work Visa", "Casa 1", "Casa 2", "Students Less than 6 Months (SSU).", "Non-university students", "Schengen Visa – With Prior Schengen Visa 2023"];
 
-                // 2. دوال المنطق الذكي لتغيير القوائم بناءً على اختيار المدينة
                 function fillSelect(id, items, selectedValue) {
                     const select = document.getElementById(id);
                     select.innerHTML = "";
@@ -142,7 +137,6 @@ app.get('/', (req, res) => {
                     updateSubTypes();
                 }
 
-                // 3. تهيئة الواجهة وتشغيل المنطق
                 fillSelect("city", N_LOCATIONS, "Casablanca");
                 fillSelect("category", N_CATEGORIES, "Normal");
                 updateVisaTypes();
@@ -150,7 +144,6 @@ app.get('/', (req, res) => {
                 document.getElementById("city").addEventListener("change", updateVisaTypes);
                 document.getElementById("visaType").addEventListener("change", updateSubTypes);
 
-                // 4. نظام الاتصال والإرسال للسيرفر
                 function fetchStats() {
                     fetch('/api/stats').then(r => r.json()).then(data => {
                         document.getElementById('stats').innerText = '📡 المتصفحات المتصلة حالياً: ' + data.connections;
@@ -162,6 +155,7 @@ app.get('/', (req, res) => {
                 function sendCommand() {
                     const payload = {
                         action: "CHANGE_PROFILE",
+                        targetPc: document.getElementById('targetPc').value,
                         city: document.getElementById('city').value,
                         visaType: document.getElementById('visaType').value,
                         subType: document.getElementById('subType').value,
@@ -176,12 +170,13 @@ app.get('/', (req, res) => {
                         body: JSON.stringify(payload)
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
-                        log.innerHTML += '✅ [تم البث لـ '+ data.clients +' متصفح]: ' + payload.city + ' - ' + payload.visaType + ' - ' + payload.subType + '<br>';
+                        let targetText = document.getElementById('targetPc').options[document.getElementById('targetPc').selectedIndex].text;
+                        log.innerHTML += '✅ [الهدف: '+ targetText +'] ('+ data.clients +' متصفح استلم الإشارة): ' + payload.city + ' - ' + payload.subType + '<br>';
                         log.scrollTop = log.scrollHeight; 
-                        document.querySelector('button').innerText = 'إرسال الإشارة للعملاء النشطين 🚀';
+                        document.querySelector('button').innerText = 'إرسال الإشارة 🚀';
                     }).catch(err => {
                         alert('❌ خطأ في الاتصال بالسيرفر');
-                        document.querySelector('button').innerText = 'إرسال الإشارة للعملاء النشطين 🚀';
+                        document.querySelector('button').innerText = 'إرسال الإشارة 🚀';
                     });
                 }
             </script>
@@ -190,12 +185,7 @@ app.get('/', (req, res) => {
     `);
 });
 
-// ==========================================
-// نظام الـ WebSockets لاستقبال وإرسال الأوامر
-// ==========================================
-app.get('/api/stats', (req, res) => {
-    res.json({ connections: wss.clients.size });
-});
+app.get('/api/stats', (req, res) => { res.json({ connections: wss.clients.size }); });
 
 app.post('/api/broadcast', (req, res) => {
     const payload = req.body;
@@ -210,9 +200,7 @@ app.post('/api/broadcast', (req, res) => {
     res.json({ success: true, clients: count });
 });
 
-wss.on('connection', (ws) => {
-    console.log("[+] متصفح جديد متصل الآن.");
-});
+wss.on('connection', (ws) => { console.log("[+] متصفح جديد متصل الآن."); });
 
 setInterval(() => {
     wss.clients.forEach(client => {
