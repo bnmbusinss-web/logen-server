@@ -82,15 +82,14 @@ app.get('/', (req, res) => {
 
                 <button onclick="sendCommand()">إرسال أمر التشغيل (العميل النشط) 🚀</button>
 
-                <!-- 🔴 قسم الرفع والتوزيع الجديد -->
                 <div class="form-group" style="margin-top: 25px; border-top: 1px solid var(--border-light); padding-top: 20px;">
-                    <label style="color: #38bdf8; font-weight: 700; font-size: 14px;">📦 نظام الرفع والتوزيع التلقائي (Load Balancer)</label>
+                    <label style="color: #38bdf8; font-weight: 700; font-size: 14px;">📦 نظام التوزيع العادل (Round-Robin)</label>
                     <input type="file" id="bulkUpload" accept=".txt,.csv" style="display: none;" onchange="handleFileUpload(event)">
                     <button class="btn-outline" onclick="document.getElementById('bulkUpload').click()">
                         📂 اختيار ملف الحسابات (TXT/CSV)
                     </button>
                     <button class="btn-green" id="distributeBtn" style="display: none;" onclick="distributeAccounts()">
-                        🎯 توزيع الحسابات على الحواسيب المستهدفة
+                        🎯 توزيع الحسابات على الحواسيب بالتساوي
                     </button>
                 </div>
 
@@ -157,13 +156,13 @@ app.get('/', (req, res) => {
                 document.getElementById("city").addEventListener("change", updateVisaTypes);
                 document.getElementById("visaType").addEventListener("change", updateSubTypes);
 
-                // إحصائيات
+                // إحصائيات دقيقة
                 let currentStats = { total: 0, details: {} };
                 function updateStatsUI() {
                     const selectedPc = document.getElementById('targetPc').value.toLowerCase();
                     const statsEl = document.getElementById('stats');
                     if (selectedPc === "all") {
-                        statsEl.innerText = '📡 إجمالي المتصفحات المتصلة (الجميع): ' + currentStats.total;
+                        statsEl.innerText = '📡 إجمالي المتصفحات المتصلة: ' + currentStats.total;
                     } else {
                         const count = currentStats.details[selectedPc] || 0;
                         const pcName = document.getElementById('targetPc').options[document.getElementById('targetPc').selectedIndex].text.replace('💻 حاسوب', '').trim();
@@ -179,7 +178,6 @@ app.get('/', (req, res) => {
                 }
                 setInterval(fetchStats, 3000); fetchStats();
 
-                // 🔴 معالجة الملف المقروء
                 window.uploadedAccounts = [];
                 function handleFileUpload(event) {
                     const file = event.target.files[0];
@@ -225,7 +223,7 @@ app.get('/', (req, res) => {
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
                         if(data.success) {
-                            log.innerHTML += '📦 [اكتمل التوزيع]: تم تقسيم ' + data.totalAccounts + ' حساب على ' + data.distributedTo + ' حواسيب بنجاح!<br>';
+                            log.innerHTML += '📦 [اكتمل التوزيع العادل]: تم تقسيم ' + data.totalAccounts + ' حساب على ' + data.distributedTo + ' حواسيب بنجاح!<br>';
                             window.uploadedAccounts = [];
                             document.getElementById('distributeBtn').style.display = 'none';
                             document.getElementById('bulkUpload').value = '';
@@ -233,7 +231,7 @@ app.get('/', (req, res) => {
                             log.innerHTML += '❌ [خطأ]: ' + data.error + '<br>';
                         }
                         log.scrollTop = log.scrollHeight; 
-                        document.getElementById('distributeBtn').innerText = '🎯 توزيع الحسابات على الحواسيب المستهدفة';
+                        document.getElementById('distributeBtn').innerText = '🎯 توزيع الحسابات على الحواسيب بالتساوي';
                     }).catch(err => { alert('❌ خطأ في الاتصال'); });
                 }
 
@@ -251,13 +249,13 @@ app.get('/', (req, res) => {
     `);
 });
 
-// API الإحصائيات والبث القديم
+// 🔴 API حساب الإحصائيات (تم تصحيحها لتعُدّ متصفحات كل حاسوب بدقة)
 app.get('/api/stats', (req, res) => {
     let stats = { total: 0, details: {} };
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
             stats.total++;
-            let pcId = client.pcId || "unknown";
+            let pcId = client.pcId ? client.pcId.toLowerCase() : "unknown";
             stats.details[pcId] = (stats.details[pcId] || 0) + 1;
         }
     });
@@ -276,15 +274,13 @@ app.post('/api/broadcast', (req, res) => {
     res.json({ success: true, clients: count });
 });
 
-// 🔴 API التوزيع التلقائي للحسابات (Load Balancer)
 app.post('/api/bulk-distribute', (req, res) => {
     const { accounts, city, visaType, subType, category, targetPc } = req.body;
     const target = targetPc ? targetPc.toLowerCase() : "all";
     
-    // فلترة الحواسيب الذكية: نحتاج (نسخة واحدة) فقط من كل حاسوب لتجنب تكرار الحفظ إذا كان فاتح 10 صفحات
     let uniquePCs = {};
     wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN && client.pcId) {
+        if (client.readyState === WebSocket.OPEN && client.pcId && client.pcId !== "unknown") {
             if (target === "all" || client.pcId === target) {
                 if (!uniquePCs[client.pcId]) uniquePCs[client.pcId] = client;
             }
@@ -292,26 +288,27 @@ app.post('/api/bulk-distribute', (req, res) => {
     });
 
     const eligibleClients = Object.values(uniquePCs);
-    if (eligibleClients.length === 0) {
-        return res.json({ success: false, error: "لا يوجد حواسيب مستهدفة متصلة حالياً لاستلام الملف." });
+    const numClients = eligibleClients.length;
+
+    if (numClients === 0) {
+        return res.json({ success: false, error: "لا يوجد حواسيب مستهدفة متصلة ومعروفة الهوية حالياً." });
     }
 
-    // تقسيم الحسابات بالتساوي
-    const numClients = eligibleClients.length;
-    const chunkSize = Math.ceil(accounts.length / numClients);
+    const chunks = Array.from({ length: numClients }, () => []);
+    accounts.forEach((acc, index) => {
+        chunks[index % numClients].push(acc);
+    });
 
     for (let i = 0; i < numClients; i++) {
-        const chunk = accounts.slice(i * chunkSize, (i + 1) * chunkSize);
-        if (chunk.length > 0) {
+        if (chunks[i].length > 0) {
             eligibleClients[i].send(JSON.stringify({
                 action: "BULK_ADD_PROFILES",
-                profiles: chunk,
+                profiles: chunks[i],
                 city, visaType, subType, category
             }));
         }
     }
 
-    console.log(`[+] تم تقسيم ${accounts.length} حساب على ${numClients} حواسيب.`);
     res.json({ success: true, distributedTo: numClients, totalAccounts: accounts.length });
 });
 
