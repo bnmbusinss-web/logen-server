@@ -83,13 +83,13 @@ app.get('/', (req, res) => {
                 <button onclick="sendCommand()">إرسال أمر التشغيل (العميل النشط) 🚀</button>
 
                 <div class="form-group" style="margin-top: 25px; border-top: 1px solid var(--border-light); padding-top: 20px;">
-                    <label style="color: #38bdf8; font-weight: 700; font-size: 14px;">📦 نظام التوزيع الصارم (إيميل واحد لكل حاسوب)</label>
+                    <label style="color: #38bdf8; font-weight: 700; font-size: 14px;">📦 نظام التوزيع الصارم (إيميل واحد لكل نافذة)</label>
                     <input type="file" id="bulkUpload" accept=".txt,.csv" style="display: none;" onchange="handleFileUpload(event)">
                     <button class="btn-outline" onclick="document.getElementById('bulkUpload').click()">
                         📂 اختيار ملف الحسابات (TXT/CSV)
                     </button>
                     <button class="btn-green" id="distributeBtn" style="display: none;" onclick="distributeAccounts()">
-                        🎯 توزيع الحسابات الصارم (1 حساب/حاسوب)
+                        🎯 توزيع الحسابات الصارم (1 حساب / لكل نافذة)
                     </button>
                 </div>
 
@@ -156,7 +156,6 @@ app.get('/', (req, res) => {
                 document.getElementById("city").addEventListener("change", updateVisaTypes);
                 document.getElementById("visaType").addEventListener("change", updateSubTypes);
 
-                // إحصائيات דقيقة
                 let currentStats = { total: 0, details: {} };
                 function updateStatsUI() {
                     const selectedPc = document.getElementById('targetPc').value.toLowerCase();
@@ -223,7 +222,7 @@ app.get('/', (req, res) => {
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
                         if(data.success) {
-                            log.innerHTML += '📦 [اكتمل التوزيع الصارم]: تم إرسال ' + data.distributedTo + ' حساب لـ ' + data.distributedTo + ' حواسيب (إيميل واحد لكل حاسوب)!<br>';
+                            log.innerHTML += '📦 [اكتمل التوزيع الصارم]: تم إرسال ' + data.distributedTo + ' حساب لـ ' + data.distributedTo + ' متصفحات!<br>';
                             window.uploadedAccounts = [];
                             document.getElementById('distributeBtn').style.display = 'none';
                             document.getElementById('bulkUpload').value = '';
@@ -231,17 +230,32 @@ app.get('/', (req, res) => {
                             log.innerHTML += '❌ [خطأ]: ' + data.error + '<br>';
                         }
                         log.scrollTop = log.scrollHeight; 
-                        document.getElementById('distributeBtn').innerText = '🎯 توزيع الحسابات الصارم (1 حساب/حاسوب)';
+                        document.getElementById('distributeBtn').innerText = '🎯 توزيع الحسابات الصارم (1 حساب / لكل نافذة)';
                     }).catch(err => { alert('❌ خطأ في الاتصال'); });
                 }
 
+                // 🔴 دالة الزر الأبيض لتغيير المدينة والفيزا يومياً للعميل النشط
                 function sendCommand() {
                     const payload = {
-                        action: "CHANGE_PROFILE", targetPc: document.getElementById('targetPc').value,
-                        city: document.getElementById('city').value, visaType: document.getElementById('visaType').value,
-                        subType: document.getElementById('subType').value, category: document.getElementById('category').value
+                        action: "CHANGE_PROFILE", 
+                        targetPc: document.getElementById('targetPc').value,
+                        city: document.getElementById('city').value, 
+                        visaType: document.getElementById('visaType').value,
+                        subType: document.getElementById('subType').value, 
+                        category: document.getElementById('category').value
                     };
-                    fetch('/api/broadcast', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    
+                    fetch('/api/broadcast', { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify(payload) 
+                    }).then(res => res.json()).then(data => {
+                        const log = document.getElementById('log');
+                        log.innerHTML += '🚀 [أمر التحديث اليومي]: تم إرسال إعدادات (' + payload.city + ') إلى ' + data.clients + ' متصفح بنجاح!<br>';
+                        log.scrollTop = log.scrollHeight;
+                    }).catch(err => {
+                        alert('❌ خطأ في الاتصال بالسيرفر');
+                    });
                 }
             </script>
         </body>
@@ -267,23 +281,21 @@ app.post('/api/broadcast', (req, res) => {
     const target = payload.targetPc ? payload.targetPc.toLowerCase() : "all";
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN && (target === "all" || client.pcId === target)) {
-            client.send(JSON.stringify(payload)); count++;
+            client.send(JSON.stringify(payload)); 
+            count++;
         }
     });
     res.json({ success: true, clients: count });
 });
 
-// 🔴 خوارزمية التوزيع الذكي: توزع الإيميلات على كل الحواسيب المتصلة حتى لو كان لها نفس الاسم!
 app.post('/api/bulk-distribute', (req, res) => {
     const { accounts, city, visaType, subType, category, targetPc } = req.body;
     const target = targetPc ? targetPc.toLowerCase() : "all";
     
-    // 1. جمع كل الحواسيب المتصلة التي تطابق الاسم (لن نقوم بحذف الأسماء المكررة)
     let eligibleClients = [];
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN && client.pcId && client.pcId !== "unknown") {
             if (target === "all" || client.pcId === target) {
-                // إضافة الحاسوب للقائمة، حتى لو كان هناك حاسوب آخر بنفس الاسم
                 eligibleClients.push(client); 
             }
         }
@@ -292,17 +304,16 @@ app.post('/api/bulk-distribute', (req, res) => {
     const numClients = eligibleClients.length;
 
     if (numClients === 0) {
-        return res.json({ success: false, error: "لا يوجد حواسيب مستهدفة متصلة حالياً." });
+        return res.json({ success: false, error: "لا يوجد متصفحات مستهدفة متصلة حالياً." });
     }
 
     let distributedCount = 0;
     
-    // 2. توزيع الحسابات بالترتيب: إيميل لكل نافذة/حاسوب
     for (let i = 0; i < numClients; i++) {
         if (accounts[i]) { 
             eligibleClients[i].send(JSON.stringify({
                 action: "BULK_ADD_PROFILES",
-                profiles: [ accounts[i] ], // إرسال حساب واحد فقط لهذا الحاسوب
+                profiles: [ accounts[i] ], 
                 city, visaType, subType, category
             }));
             distributedCount++;
