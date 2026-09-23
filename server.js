@@ -273,36 +273,36 @@ app.post('/api/broadcast', (req, res) => {
     res.json({ success: true, clients: count });
 });
 
-// 🔴 خوارزمية التوزيع الصارم: إيميل واحد كحد أقصى لكل حاسوب
+// 🔴 خوارزمية التوزيع الذكي: توزع الإيميلات على كل الحواسيب المتصلة حتى لو كان لها نفس الاسم!
 app.post('/api/bulk-distribute', (req, res) => {
     const { accounts, city, visaType, subType, category, targetPc } = req.body;
     const target = targetPc ? targetPc.toLowerCase() : "all";
     
-    // إحضار نسخة واحدة من كل حاسوب متصل لتجنب الإرسال المزدوج
-    let uniquePCs = {};
+    // 1. جمع كل الحواسيب المتصلة التي تطابق الاسم (لن نقوم بحذف الأسماء المكررة)
+    let eligibleClients = [];
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN && client.pcId && client.pcId !== "unknown") {
             if (target === "all" || client.pcId === target) {
-                if (!uniquePCs[client.pcId]) uniquePCs[client.pcId] = client;
+                // إضافة الحاسوب للقائمة، حتى لو كان هناك حاسوب آخر بنفس الاسم
+                eligibleClients.push(client); 
             }
         }
     });
 
-    const eligibleClients = Object.values(uniquePCs);
     const numClients = eligibleClients.length;
 
     if (numClients === 0) {
-        return res.json({ success: false, error: "لا يوجد حواسيب مستهدفة متصلة ومعروفة الهوية حالياً." });
+        return res.json({ success: false, error: "لا يوجد حواسيب مستهدفة متصلة حالياً." });
     }
 
     let distributedCount = 0;
     
-    // إعطاء كل حاسوب إيميلاً واحداً فقط من الملف
+    // 2. توزيع الحسابات بالترتيب: إيميل لكل نافذة/حاسوب
     for (let i = 0; i < numClients; i++) {
         if (accounts[i]) { 
             eligibleClients[i].send(JSON.stringify({
                 action: "BULK_ADD_PROFILES",
-                profiles: [ accounts[i] ], // 👈 هنا السر: إرسال حساب واحد فقط
+                profiles: [ accounts[i] ], // إرسال حساب واحد فقط لهذا الحاسوب
                 city, visaType, subType, category
             }));
             distributedCount++;
