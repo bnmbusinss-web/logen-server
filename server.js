@@ -25,13 +25,17 @@ app.get('/', (req, res) => {
                 header { text-align: center; margin-bottom: 30px; }
                 h1 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: 3px; }
                 .subtitle { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-top: 5px; text-transform: uppercase; }
-                .stats { text-align: center; margin-bottom: 25px; font-size: 13px; color: #22c55e; background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: 10px; border: 1px solid rgba(34, 197, 94, 0.2); font-weight: 600;}
+                .stats { text-align: center; margin-bottom: 25px; font-size: 13px; color: #22c55e; background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: 10px; border: 1px solid rgba(34, 197, 94, 0.2); font-weight: 600; transition: all 0.3s;}
                 .form-group { margin-bottom: 16px; }
                 label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 500; color: var(--text-muted); }
                 select { width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text-main); font-size: 14px; outline: none; transition: 0.2s; appearance: none; }
                 select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 1px var(--border-focus); }
                 button { width: 100%; padding: 16px; margin-top: 20px; border-radius: 10px; border: none; background: var(--accent); color: #000; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; }
                 button:hover { background: var(--accent-hover); transform: translateY(-1px); }
+                .btn-outline { background: transparent; color: #38bdf8; border: 1px solid #38bdf8; margin-top: 5px; }
+                .btn-outline:hover { background: rgba(56, 189, 248, 0.1); }
+                .btn-green { background: #22c55e; color: #000; }
+                .btn-green:hover { background: #16a34a; }
                 .log { background: var(--bg-input); padding: 15px; margin-top: 25px; height: 160px; overflow-y: auto; border-radius: 10px; font-family: monospace; font-size: 12px; color: #22c55e; border: 1px solid var(--border-light); line-height: 1.6;}
             </style>
         </head>
@@ -63,26 +67,35 @@ app.get('/', (req, res) => {
                     <label>المركز (Location)</label>
                     <select id="city"></select>
                 </div>
-
                 <div class="form-group">
                     <label>نوع التأشيرة (Visa Type)</label>
                     <select id="visaType"></select>
                 </div>
-
                 <div class="form-group">
                     <label>الفئة الفرعية (Visa Sub Type)</label>
                     <select id="subType"></select>
                 </div>
-
                 <div class="form-group">
                     <label>الفئة (Category)</label>
                     <select id="category"></select>
                 </div>
 
-                <button onclick="sendCommand()">إرسال الإشارة 🚀</button>
+                <button onclick="sendCommand()">إرسال أمر التشغيل (العميل النشط) 🚀</button>
+
+                <!-- 🔴 قسم الرفع والتوزيع الجديد -->
+                <div class="form-group" style="margin-top: 25px; border-top: 1px solid var(--border-light); padding-top: 20px;">
+                    <label style="color: #38bdf8; font-weight: 700; font-size: 14px;">📦 نظام الرفع والتوزيع التلقائي (Load Balancer)</label>
+                    <input type="file" id="bulkUpload" accept=".txt,.csv" style="display: none;" onchange="handleFileUpload(event)">
+                    <button class="btn-outline" onclick="document.getElementById('bulkUpload').click()">
+                        📂 اختيار ملف الحسابات (TXT/CSV)
+                    </button>
+                    <button class="btn-green" id="distributeBtn" style="display: none;" onclick="distributeAccounts()">
+                        🎯 توزيع الحسابات على الحواسيب المستهدفة
+                    </button>
+                </div>
 
                 <div class="log" id="log">
-                    > نظام Samurai جاهز لتلقي الأوامر وتوزيعها...<br>
+                    > نظام Samurai السحابي جاهز...<br>
                 </div>
             </div>
 
@@ -144,17 +157,58 @@ app.get('/', (req, res) => {
                 document.getElementById("city").addEventListener("change", updateVisaTypes);
                 document.getElementById("visaType").addEventListener("change", updateSubTypes);
 
+                // إحصائيات
+                let currentStats = { total: 0, details: {} };
+                function updateStatsUI() {
+                    const selectedPc = document.getElementById('targetPc').value.toLowerCase();
+                    const statsEl = document.getElementById('stats');
+                    if (selectedPc === "all") {
+                        statsEl.innerText = '📡 إجمالي المتصفحات المتصلة (الجميع): ' + currentStats.total;
+                    } else {
+                        const count = currentStats.details[selectedPc] || 0;
+                        const pcName = document.getElementById('targetPc').options[document.getElementById('targetPc').selectedIndex].text.replace('💻 حاسوب', '').trim();
+                        statsEl.innerText = '📡 متصفحات (' + pcName + ') المتصلة حالياً: ' + count;
+                    }
+                }
+                document.getElementById('targetPc').addEventListener('change', updateStatsUI);
+
                 function fetchStats() {
                     fetch('/api/stats').then(r => r.json()).then(data => {
-                        document.getElementById('stats').innerText = '📡 المتصفحات المتصلة حالياً: ' + data.connections;
+                        currentStats = data; updateStatsUI();
                     }).catch(e => {});
                 }
-                setInterval(fetchStats, 3000);
-                fetchStats();
+                setInterval(fetchStats, 3000); fetchStats();
 
-                function sendCommand() {
+                // 🔴 معالجة الملف المقروء
+                window.uploadedAccounts = [];
+                function handleFileUpload(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        window.uploadedAccounts = [];
+                        const lines = e.target.result.split(/\\r?\\n/).filter(line => line.trim() !== "");
+                        lines.forEach(line => {
+                            const parts = line.split(/[:,]/).map(s => s.trim());
+                            if (parts.length >= 2) {
+                                window.uploadedAccounts.push({
+                                    email: parts[0],
+                                    password: parts[1],
+                                    appPassword: parts[2] || ""
+                                });
+                            }
+                        });
+                        alert('تم قراءة ' + window.uploadedAccounts.length + ' حساب من الملف بنجاح! جاهز للتوزيع.');
+                        document.getElementById('distributeBtn').style.display = 'block';
+                    };
+                    reader.readAsText(file);
+                }
+
+                function distributeAccounts() {
+                    if (window.uploadedAccounts.length === 0) return alert("الملف فارغ!");
+                    
                     const payload = {
-                        action: "CHANGE_PROFILE",
+                        accounts: window.uploadedAccounts,
                         targetPc: document.getElementById('targetPc').value,
                         city: document.getElementById('city').value,
                         visaType: document.getElementById('visaType').value,
@@ -162,22 +216,34 @@ app.get('/', (req, res) => {
                         category: document.getElementById('category').value
                     };
                     
-                    document.querySelector('button').innerText = '⏳ جاري الإرسال...';
+                    document.getElementById('distributeBtn').innerText = '⏳ جاري التقسيم والتوزيع...';
                     
-                    fetch('/api/broadcast', {
+                    fetch('/api/bulk-distribute', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
-                        let targetText = document.getElementById('targetPc').options[document.getElementById('targetPc').selectedIndex].text;
-                        log.innerHTML += '✅ [الهدف: '+ targetText +'] ('+ data.clients +' متصفح استلم الإشارة): ' + payload.city + ' - ' + payload.subType + '<br>';
+                        if(data.success) {
+                            log.innerHTML += '📦 [اكتمل التوزيع]: تم تقسيم ' + data.totalAccounts + ' حساب على ' + data.distributedTo + ' حواسيب بنجاح!<br>';
+                            window.uploadedAccounts = [];
+                            document.getElementById('distributeBtn').style.display = 'none';
+                            document.getElementById('bulkUpload').value = '';
+                        } else {
+                            log.innerHTML += '❌ [خطأ]: ' + data.error + '<br>';
+                        }
                         log.scrollTop = log.scrollHeight; 
-                        document.querySelector('button').innerText = 'إرسال الإشارة 🚀';
-                    }).catch(err => {
-                        alert('❌ خطأ في الاتصال بالسيرفر');
-                        document.querySelector('button').innerText = 'إرسال الإشارة 🚀';
-                    });
+                        document.getElementById('distributeBtn').innerText = '🎯 توزيع الحسابات على الحواسيب المستهدفة';
+                    }).catch(err => { alert('❌ خطأ في الاتصال'); });
+                }
+
+                function sendCommand() {
+                    const payload = {
+                        action: "CHANGE_PROFILE", targetPc: document.getElementById('targetPc').value,
+                        city: document.getElementById('city').value, visaType: document.getElementById('visaType').value,
+                        subType: document.getElementById('subType').value, category: document.getElementById('category').value
+                    };
+                    fetch('/api/broadcast', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 }
             </script>
         </body>
@@ -185,32 +251,85 @@ app.get('/', (req, res) => {
     `);
 });
 
-app.get('/api/stats', (req, res) => { res.json({ connections: wss.clients.size }); });
+// API الإحصائيات والبث القديم
+app.get('/api/stats', (req, res) => {
+    let stats = { total: 0, details: {} };
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            stats.total++;
+            let pcId = client.pcId || "unknown";
+            stats.details[pcId] = (stats.details[pcId] || 0) + 1;
+        }
+    });
+    res.json(stats);
+});
 
 app.post('/api/broadcast', (req, res) => {
     const payload = req.body;
     let count = 0;
+    const target = payload.targetPc ? payload.targetPc.toLowerCase() : "all";
     wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(payload));
-            count++;
+        if (client.readyState === WebSocket.OPEN && (target === "all" || client.pcId === target)) {
+            client.send(JSON.stringify(payload)); count++;
         }
     });
-    console.log("Broadcast Command:", payload);
     res.json({ success: true, clients: count });
 });
 
-wss.on('connection', (ws) => { console.log("[+] متصفح جديد متصل الآن."); });
+// 🔴 API التوزيع التلقائي للحسابات (Load Balancer)
+app.post('/api/bulk-distribute', (req, res) => {
+    const { accounts, city, visaType, subType, category, targetPc } = req.body;
+    const target = targetPc ? targetPc.toLowerCase() : "all";
+    
+    // فلترة الحواسيب الذكية: نحتاج (نسخة واحدة) فقط من كل حاسوب لتجنب تكرار الحفظ إذا كان فاتح 10 صفحات
+    let uniquePCs = {};
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN && client.pcId) {
+            if (target === "all" || client.pcId === target) {
+                if (!uniquePCs[client.pcId]) uniquePCs[client.pcId] = client;
+            }
+        }
+    });
+
+    const eligibleClients = Object.values(uniquePCs);
+    if (eligibleClients.length === 0) {
+        return res.json({ success: false, error: "لا يوجد حواسيب مستهدفة متصلة حالياً لاستلام الملف." });
+    }
+
+    // تقسيم الحسابات بالتساوي
+    const numClients = eligibleClients.length;
+    const chunkSize = Math.ceil(accounts.length / numClients);
+
+    for (let i = 0; i < numClients; i++) {
+        const chunk = accounts.slice(i * chunkSize, (i + 1) * chunkSize);
+        if (chunk.length > 0) {
+            eligibleClients[i].send(JSON.stringify({
+                action: "BULK_ADD_PROFILES",
+                profiles: chunk,
+                city, visaType, subType, category
+            }));
+        }
+    }
+
+    console.log(`[+] تم تقسيم ${accounts.length} حساب على ${numClients} حواسيب.`);
+    res.json({ success: true, distributedTo: numClients, totalAccounts: accounts.length });
+});
+
+wss.on('connection', (ws) => {
+    ws.pcId = "unknown"; 
+    ws.on('message', (message) => {
+        try {
+            const data = JSON.parse(message);
+            if (data.action === "REGISTER") ws.pcId = data.pcId.toLowerCase();
+        } catch (e) {}
+    });
+});
 
 setInterval(() => {
     wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ action: "PING" }));
-        }
+        if (client.readyState === WebSocket.OPEN) client.send(JSON.stringify({ action: "PING" }));
     });
 }, 20000);
 
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-    console.log('🚀 Samurai Commander is running on port ' + PORT);
-});
+server.listen(PORT, () => console.log('🚀 Samurai Commander is running on port ' + PORT));
