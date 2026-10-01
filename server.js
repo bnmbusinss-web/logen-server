@@ -22,24 +22,10 @@ app.get('/', (req, res) => {
                 :root { --bg-base: #09090b; --bg-surface: #18181b; --bg-input: #000000; --border-light: #27272a; --border-focus: #52525b; --text-main: #fafafa; --text-muted: #a1a1aa; --accent: #ffffff; --accent-hover: #e4e4e7; }
                 body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg-base); color: var(--text-main); padding: 30px 15px; margin: 0; }
                 .container { max-width: 600px; margin: 0 auto; background: var(--bg-surface); padding: 30px; border-radius: 16px; border: 1px solid var(--border-light); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);}
-                
-                /* 🔴 هنا تمت إضافة (position: relative) لكي نستطيع وضع الزر في الزاوية */
-                header { text-align: center; margin-bottom: 20px; position: relative; } 
+                header { text-align: center; margin-bottom: 20px; }
                 h1 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: 3px; }
                 .subtitle { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-top: 5px; text-transform: uppercase; }
                 
-                /* 🔴 هنا تمت إضافة ستايل زر التقسيم الذكي البرتقالي */
-                .btn-split-magic {
-                    position: absolute;
-                    top: 0; left: 0; 
-                    background: linear-gradient(135deg, #f59e0b, #d97706);
-                    color: #fff; border: none; padding: 8px 12px;
-                    border-radius: 8px; font-weight: 800; font-size: 11px;
-                    cursor: pointer; transition: all 0.3s;
-                    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
-                }
-                .btn-split-magic:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(245, 158, 11, 0.5); }
-
                 .tabs-container { display: flex; gap: 10px; margin-bottom: 25px; }
                 .tab-btn { flex: 1; padding: 14px; text-align: center; font-size: 15px; font-weight: 800; border-radius: 10px; cursor: pointer; transition: all 0.3s; color: #fff; border: 2px solid transparent; background: #1e293b; border-color: #334155; }
                 .tab-pt.active { background: #046b46; border-color: #ffc400; box-shadow: 0 0 15px rgba(4,107,70,0.5); }
@@ -56,14 +42,17 @@ app.get('/', (req, res) => {
                 .btn-outline:hover { background: rgba(56, 189, 248, 0.1); }
                 .btn-green { background: #22c55e; color: #000; }
                 .btn-green:hover { background: #16a34a; }
+                
+                /* ستايل زر التقسيم الذكي الجديد */
+                .btn-magic { background: transparent; color: #f59e0b; border: 1px solid #f59e0b; margin-top: 5px; }
+                .btn-magic:hover { background: rgba(245, 158, 11, 0.1); }
+
                 .log { background: var(--bg-input); padding: 15px; margin-top: 25px; height: 160px; overflow-y: auto; border-radius: 10px; font-family: monospace; font-size: 12px; color: #22c55e; border: 1px solid var(--border-light); line-height: 1.6;}
             </style>
         </head>
         <body>
             <div class="container">
                 <header>
-                    <!-- 🔴 هنا تمت إضافة زر التقسيم الذكي في واجهة لوحة التحكم -->
-                    <button class="btn-split-magic" onclick="magicSplit()">🌓 تقسيم (Casa/Rabat)</button>
                     <h1>SAMURAI</h1>
                     <div class="subtitle" id="country-subtitle">Cloud Command Center - ES</div>
                 </header>
@@ -109,14 +98,23 @@ app.get('/', (req, res) => {
 
                 <button onclick="sendCommand()" id="btn-send">إرسال أمر التشغيل (العميل النشط) 🚀</button>
 
+                <!-- قسم التقسيم الذكي 50/50 -->
                 <div class="form-group" style="margin-top: 25px; border-top: 1px solid var(--border-light); padding-top: 20px;">
-                    <label style="color: #38bdf8; font-weight: 700; font-size: 14px;">📦 نظام التوزيع المتقدم (1 حساب/نافذة)</label>
+                    <label style="color: #f59e0b; font-weight: 700; font-size: 14px;">🌓 نظام التقسيم السريع (نصف كازا / نصف رباط)</label>
+                    <button class="btn-magic" onclick="magicSplit()">
+                        تقسيم نوافذ هذا الحاسوب 50/50 🌓
+                    </button>
+                </div>
+
+                <!-- قسم التوزيع بالملف -->
+                <div class="form-group" style="margin-top: 25px; border-top: 1px solid var(--border-light); padding-top: 20px;">
+                    <label style="color: #38bdf8; font-weight: 700; font-size: 14px;">📦 نظام التوزيع الصارم (إيميل واحد لكل نافذة)</label>
                     <input type="file" id="bulkUpload" accept=".txt,.csv" style="display: none;" onchange="handleFileUpload(event)">
                     <button class="btn-outline" onclick="document.getElementById('bulkUpload').click()">
                         📂 اختيار ملف الحسابات (TXT/CSV)
                     </button>
                     <button class="btn-green" id="distributeBtn" style="display: none;" onclick="distributeAccounts()">
-                        🎯 توزيع وتقسيم الحسابات
+                        🎯 توزيع الحسابات الصارم (1 حساب / لكل نافذة)
                     </button>
                 </div>
 
@@ -154,10 +152,23 @@ app.get('/', (req, res) => {
 
                 function getSubtypesPT(location, visatype) {
                     if (visatype === "Long Stay Visa") {
-                        return ["Academic or Professional Training Course","Any other category of Long-Stay visa","Family Member of Portuguese Citizen for family reunification ","Family Reunification  ","Higher Education Studies","Highly Qualified Activity","Work"];
+                        return [
+                            "Academic or Professional Training Course",
+                            "Any other category of Long-Stay visa",
+                            "Family Member of Portuguese Citizen for family reunification ",
+                            "Family Reunification  ",
+                            "Higher Education Studies",
+                            "Highly Qualified Activity",
+                            "Work"
+                        ];
                     }
                     if (visatype === "Short Stay Visa") {
-                        return ["Business or other professional reason ","Family Member of EU Citizen - Directive 2004/38/EC","Spouse of Portuguese citizen for a short visit to Portugal  ","Short Stay Visa"];
+                        return [
+                            "Business or other professional reason ",
+                            "Family Member of EU Citizen - Directive 2004/38/EC",
+                            "Spouse of Portuguese citizen for a short visit to Portugal  ",
+                            "Short Stay Visa"
+                        ];
                     }
                     return [];
                 }
@@ -177,12 +188,20 @@ app.get('/', (req, res) => {
                 function updateSubTypes() {
                     const loc = document.getElementById("city").value;
                     const vType = document.getElementById("visaType").value;
-                    let available = CURRENT_COUNTRY === 'ES' ? getSubtypesES(loc, vType) : getSubtypesPT(loc, vType);
+                    let available = [];
+
+                    if (CURRENT_COUNTRY === 'ES') {
+                        available = getSubtypesES(loc, vType);
+                    } else {
+                        available = getSubtypesPT(loc, vType);
+                    }
+
                     fillSelect("subType", available, available[0]);
                 }
 
                 function updateVisaTypes() {
                     const loc = document.getElementById("city").value;
+                    
                     if (CURRENT_COUNTRY === 'ES') {
                         const autoSchengen = ["Rabat", "Tangier", "Tetouan", "Agadir", "Nador"];
                         let targetVisa = autoSchengen.includes(loc) ? "Schengen Visa" : "Schengen Visa";
@@ -195,18 +214,26 @@ app.get('/', (req, res) => {
 
                 function switchCountry(country) {
                     CURRENT_COUNTRY = country;
+                    
                     document.getElementById('tab-pt').classList.toggle('active', country === 'PT');
                     document.getElementById('tab-es').classList.toggle('active', country === 'ES');
                     document.getElementById('country-subtitle').innerText = "Cloud Command Center - " + country;
+                    
                     document.getElementById('btn-send').style.background = country === 'PT' ? '#046b46' : '#ffffff';
                     document.getElementById('btn-send').style.color = country === 'PT' ? '#ffffff' : '#000000';
-                    fillSelect("city", country === 'ES' ? ES_LOCATIONS : PT_LOCATIONS, "Casablanca");
+
+                    if (country === 'ES') {
+                        fillSelect("city", ES_LOCATIONS, "Casablanca");
+                    } else {
+                        fillSelect("city", PT_LOCATIONS, "Casablanca");
+                    }
                     fillSelect("category", SHARED_CATEGORIES, "Normal");
                     updateVisaTypes();
                 }
 
                 document.getElementById("city").addEventListener("change", updateVisaTypes);
                 document.getElementById("visaType").addEventListener("change", updateSubTypes);
+
                 switchCountry('ES');
 
                 let currentStats = { total: 0, details: {} };
@@ -228,7 +255,9 @@ app.get('/', (req, res) => {
                         currentStats = data; updateStatsUI();
                     }).catch(e => {});
                 }
-                setInterval(fetchStats, 3000); fetchStats();
+                
+                // تم تقليل سرعة الطلبات لـ 10 ثواني لتخفيف الضغط على السيرفر (Lag Fix)
+                setInterval(fetchStats, 10000); fetchStats();
 
                 window.uploadedAccounts = [];
                 function handleFileUpload(event) {
@@ -237,7 +266,7 @@ app.get('/', (req, res) => {
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         window.uploadedAccounts = [];
-                        const lines = e.target.result.split(/\r?\n/).filter(line => line.trim() !== "");
+                        const lines = e.target.result.split(/\\r?\\n/).filter(line => line.trim() !== "");
                         lines.forEach(line => {
                             const parts = line.split(/[:,]/).map(s => s.trim());
                             if (parts.length >= 2) {
@@ -245,11 +274,11 @@ app.get('/', (req, res) => {
                                     email: parts[0],
                                     password: parts[1],
                                     appPassword: parts[2] || "",
-                                    customCity: parts[3] || ""
+                                    customCity: parts[3] || "" // تم إضافة دعم قراءة المدينة من الملف
                                 });
                             }
                         });
-                        alert('تم قراءة ' + window.uploadedAccounts.length + ' حساب بنجاح!');
+                        alert('تم قراءة ' + window.uploadedAccounts.length + ' حساب من الملف بنجاح! جاهز للتوزيع.');
                         document.getElementById('distributeBtn').style.display = 'block';
                     };
                     reader.readAsText(file);
@@ -259,7 +288,7 @@ app.get('/', (req, res) => {
                     if (window.uploadedAccounts.length === 0) return alert("الملف فارغ!");
                     
                     const payload = {
-                        country: CURRENT_COUNTRY, 
+                        country: CURRENT_COUNTRY,
                         accounts: window.uploadedAccounts,
                         targetPc: document.getElementById('targetPc').value,
                         city: document.getElementById('city').value,
@@ -268,7 +297,7 @@ app.get('/', (req, res) => {
                         category: document.getElementById('category').value
                     };
                     
-                    document.getElementById('distributeBtn').innerText = '⏳ جاري التقسيم...';
+                    document.getElementById('distributeBtn').innerText = '⏳ جاري التقسيم والتوزيع...';
                     
                     fetch('/api/bulk-distribute', {
                         method: 'POST',
@@ -277,7 +306,7 @@ app.get('/', (req, res) => {
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
                         if(data.success) {
-                            log.innerHTML += '📦 [اكتمل التقسيم لـ ' + CURRENT_COUNTRY + ']: تم إرسال ' + data.distributedTo + ' حساب متصل!<br>';
+                            log.innerHTML += '📦 [التوزيع لـ ' + CURRENT_COUNTRY + ']: تم إرسال ' + data.distributedTo + ' حساب!<br>';
                             window.uploadedAccounts = [];
                             document.getElementById('distributeBtn').style.display = 'none';
                             document.getElementById('bulkUpload').value = '';
@@ -285,7 +314,7 @@ app.get('/', (req, res) => {
                             log.innerHTML += '❌ [خطأ]: ' + data.error + '<br>';
                         }
                         log.scrollTop = log.scrollHeight; 
-                        document.getElementById('distributeBtn').innerText = '🎯 توزيع وتقسيم الحسابات';
+                        document.getElementById('distributeBtn').innerText = '🎯 توزيع الحسابات الصارم (1 حساب / لكل نافذة)';
                     }).catch(err => { alert('❌ خطأ في الاتصال'); });
                 }
 
@@ -306,15 +335,17 @@ app.get('/', (req, res) => {
                         body: JSON.stringify(payload) 
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
-                        log.innerHTML += '🚀 [أمر تشغيل ' + CURRENT_COUNTRY + ']: تم الإرسال لـ ' + data.clients + ' نافذة بنجاح!<br>';
+                        log.innerHTML += '🚀 [أمر تشغيل ' + CURRENT_COUNTRY + ']: تم الإرسال لـ ' + data.clients + ' متصفح بنجاح!<br>';
                         log.scrollTop = log.scrollHeight;
-                    }).catch(err => { alert('❌ خطأ في الاتصال'); });
+                    }).catch(err => {
+                        alert('❌ خطأ في الاتصال بالسيرفر');
+                    });
                 }
 
-                // 🔴 هنا تمت إضافة الدالة البرمجية الخاصة بزر التقسيم الذكي
+                // دالة التقسيم الذكي 50/50
                 function magicSplit() {
                     const pc = document.getElementById('targetPc').value;
-                    if(!confirm("هل أنت متأكد من تقسيم متصفحات (" + pc + ") مناصفة بين كازا والرباط؟")) return;
+                    if(!confirm("هل أنت متأكد من تقسيم المتصفحات مناصفة بالترتيب بين كازا والرباط؟")) return;
 
                     const payload = {
                         country: CURRENT_COUNTRY, 
@@ -344,6 +375,10 @@ app.get('/', (req, res) => {
     `);
 });
 
+// ============================================
+// الجزء الخاص بالـ Backend Server
+// ============================================
+
 app.get('/api/stats', (req, res) => {
     let stats = { total: 0, details: {} };
     wss.clients.forEach(client => {
@@ -369,7 +404,7 @@ app.post('/api/broadcast', (req, res) => {
     res.json({ success: true, clients: count });
 });
 
-// 🔴 هنا تمت إضافة العقل المدبر للتقسيم الذكي في خلفية السيرفر (API)
+// مسار التقسيم الذكي 50/50
 app.post('/api/magic-split', (req, res) => {
     const { targetPc, country, visaType, subType, category } = req.body;
     const target = targetPc ? targetPc.toLowerCase() : "all";
@@ -387,12 +422,10 @@ app.post('/api/magic-split', (req, res) => {
     if (numClients === 0) return res.json({ success: false, error: "لا يوجد متصفحات متصلة." });
 
     let count = 0;
-    // القسمة على 2: النصف الأول يأخذ كازا، والنصف الثاني يأخذ الرباط
     const half = Math.ceil(numClients / 2);
     
     eligibleClients.forEach((client, index) => {
-        let assignedCity = (index < half) ? "Casablanca" : "Rabat";
-        
+        let assignedCity = (index < half) ? "Casablanca" : "Rabat"; // الترتيب: النصف الأول كازا، الثاني رباط
         client.send(JSON.stringify({
             action: "CHANGE_PROFILE", 
             country: country, 
@@ -419,12 +452,16 @@ app.post('/api/bulk-distribute', (req, res) => {
     });
 
     const numClients = eligibleClients.length;
-    if (numClients === 0) return res.json({ success: false, error: "لا يوجد متصفحات مستهدفة متصلة حالياً." });
+
+    if (numClients === 0) {
+        return res.json({ success: false, error: "لا يوجد متصفحات مستهدفة متصلة حالياً." });
+    }
 
     let distributedCount = 0;
     
     for (let i = 0; i < numClients; i++) {
         if (accounts[i]) { 
+            // تحديد المدينة (من الملف إذا وجدت، أو من القائمة)
             let finalCity = accounts[i].customCity !== "" ? accounts[i].customCity : city;
 
             eligibleClients[i].send(JSON.stringify({
@@ -441,8 +478,13 @@ app.post('/api/bulk-distribute', (req, res) => {
     res.json({ success: true, distributedTo: distributedCount, totalAccounts: distributedCount });
 });
 
+// حل مشكلة ثقل السيرفر (Zombie Connections Fix)
 wss.on('connection', (ws) => {
     ws.pcId = "unknown"; 
+    ws.isAlive = true; 
+    
+    ws.on('pong', () => { ws.isAlive = true; }); 
+
     ws.on('message', (message) => {
         try {
             const data = JSON.parse(message);
@@ -453,9 +495,14 @@ wss.on('connection', (ws) => {
 
 setInterval(() => {
     wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) client.send(JSON.stringify({ action: "PING" }));
+        if (client.isAlive === false) return client.terminate(); 
+        client.isAlive = false; 
+        client.ping(); 
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ action: "PING" })); 
+        }
     });
-}, 20000);
+}, 30000);
 
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => console.log('🚀 Samurai Commander is running on port ' + PORT));
