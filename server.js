@@ -26,11 +26,15 @@ app.get('/', (req, res) => {
                 h1 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: 3px; }
                 .subtitle { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-top: 5px; text-transform: uppercase; }
                 
-                .tabs-container { display: flex; gap: 10px; margin-bottom: 25px; }
+                .tabs-container { display: flex; gap: 10px; margin-bottom: 15px; } /* تم تقليل المسافة لتناسب الزر الجديد */
                 .tab-btn { flex: 1; padding: 14px; text-align: center; font-size: 15px; font-weight: 800; border-radius: 10px; cursor: pointer; transition: all 0.3s; color: #fff; border: 2px solid transparent; background: #1e293b; border-color: #334155; }
                 .tab-pt.active { background: #046b46; border-color: #ffc400; box-shadow: 0 0 15px rgba(4,107,70,0.5); }
                 .tab-es.active { background: #da291c; border-color: #ffc400; box-shadow: 0 0 15px rgba(218,41,28,0.5); }
                 
+                /* 🔴 ستايل زر التشغيل السريع الجديد */
+                .btn-start-only { width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 10px; border: none; background: #3b82f6; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
+                .btn-start-only:hover { background: #2563eb; transform: translateY(-1px); }
+
                 .stats { text-align: center; margin-bottom: 25px; font-size: 13px; color: #22c55e; background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: 10px; border: 1px solid rgba(34, 197, 94, 0.2); font-weight: 600; transition: all 0.3s;}
                 .form-group { margin-bottom: 16px; }
                 label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 500; color: var(--text-muted); }
@@ -43,7 +47,6 @@ app.get('/', (req, res) => {
                 .btn-green { background: #22c55e; color: #000; }
                 .btn-green:hover { background: #16a34a; }
                 
-                /* ستايل زر التقسيم الذكي الجديد */
                 .btn-magic { background: transparent; color: #f59e0b; border: 1px solid #f59e0b; margin-top: 5px; }
                 .btn-magic:hover { background: rgba(245, 158, 11, 0.1); }
 
@@ -62,6 +65,9 @@ app.get('/', (req, res) => {
                     <div id="tab-pt" class="tab-btn tab-pt" onclick="switchCountry('PT')">🇵🇹 البرتغال PT</div>
                 </div>
                 
+                <!-- 🔴 الزر الجديد: تشغيل فقط دون تغيير الإعدادات -->
+                <button class="btn-start-only" onclick="startWithoutChange()">▶️ تشغيل المتصفحات فقط (بدون تغيير الإعدادات)</button>
+
                 <div class="stats" id="stats">📡 جاري الاتصال بالمتصفحات...</div>
 
                 <div class="form-group">
@@ -96,7 +102,7 @@ app.get('/', (req, res) => {
                     <select id="category"></select>
                 </div>
 
-                <button onclick="sendCommand()" id="btn-send">إرسال أمر التشغيل (العميل النشط) 🚀</button>
+                <button onclick="sendCommand()" id="btn-send">حفظ الإعدادات الجديدة + تشغيل 🚀</button>
 
                 <!-- قسم التقسيم الذكي 50/50 -->
                 <div class="form-group" style="margin-top: 25px; border-top: 1px solid var(--border-light); padding-top: 20px;">
@@ -207,7 +213,7 @@ app.get('/', (req, res) => {
                         let targetVisa = autoSchengen.includes(loc) ? "Schengen Visa" : "Schengen Visa";
                         fillSelect("visaType", ES_VISATYPES, targetVisa);
                     } else {
-                        fillSelect("visaType", PT_VISATYPES, PT_VISATYPES[1]); 
+                        fillSelect("visaType", PT_VISATYPES, PT_VISATYPES[1]); // Short Stay default
                     }
                     updateSubTypes();
                 }
@@ -256,7 +262,6 @@ app.get('/', (req, res) => {
                     }).catch(e => {});
                 }
                 
-                // تم تقليل سرعة الطلبات لـ 10 ثواني لتخفيف الضغط على السيرفر (Lag Fix)
                 setInterval(fetchStats, 10000); fetchStats();
 
                 window.uploadedAccounts = [];
@@ -274,7 +279,7 @@ app.get('/', (req, res) => {
                                     email: parts[0],
                                     password: parts[1],
                                     appPassword: parts[2] || "",
-                                    customCity: parts[3] || "" // تم إضافة دعم قراءة المدينة من الملف
+                                    customCity: parts[3] || "" 
                                 });
                             }
                         });
@@ -288,7 +293,7 @@ app.get('/', (req, res) => {
                     if (window.uploadedAccounts.length === 0) return alert("الملف فارغ!");
                     
                     const payload = {
-                        country: CURRENT_COUNTRY,
+                        country: CURRENT_COUNTRY, 
                         accounts: window.uploadedAccounts,
                         targetPc: document.getElementById('targetPc').value,
                         city: document.getElementById('city').value,
@@ -306,7 +311,7 @@ app.get('/', (req, res) => {
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
                         if(data.success) {
-                            log.innerHTML += '📦 [التوزيع لـ ' + CURRENT_COUNTRY + ']: تم إرسال ' + data.distributedTo + ' حساب!<br>';
+                            log.innerHTML += '📦 [التوزيع لـ ' + CURRENT_COUNTRY + ']: تم إرسال ' + data.distributedTo + ' حساب لـ ' + data.distributedTo + ' متصفحات!<br>';
                             window.uploadedAccounts = [];
                             document.getElementById('distributeBtn').style.display = 'none';
                             document.getElementById('bulkUpload').value = '';
@@ -316,6 +321,25 @@ app.get('/', (req, res) => {
                         log.scrollTop = log.scrollHeight; 
                         document.getElementById('distributeBtn').innerText = '🎯 توزيع الحسابات الصارم (1 حساب / لكل نافذة)';
                     }).catch(err => { alert('❌ خطأ في الاتصال'); });
+                }
+
+                // 🔴 الدالة الجديدة الخاصة بالزر الأزرق (تشغيل فقط دون تغيير)
+                function startWithoutChange() {
+                    const pc = document.getElementById('targetPc').value;
+                    const payload = { 
+                        action: "START_ONLY", 
+                        country: CURRENT_COUNTRY, 
+                        targetPc: pc 
+                    };
+                    fetch('/api/broadcast', { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify(payload) 
+                    }).then(res => res.json()).then(data => {
+                        const log = document.getElementById('log');
+                        log.innerHTML += '▶️ [أمر تشغيل فقط]: تم إرسال إشارة الانطلاق لـ ' + data.clients + ' متصفح!<br>';
+                        log.scrollTop = log.scrollHeight;
+                    }).catch(err => alert('❌ خطأ في الاتصال'));
                 }
 
                 function sendCommand() {
@@ -335,14 +359,13 @@ app.get('/', (req, res) => {
                         body: JSON.stringify(payload) 
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
-                        log.innerHTML += '🚀 [أمر تشغيل ' + CURRENT_COUNTRY + ']: تم الإرسال لـ ' + data.clients + ' متصفح بنجاح!<br>';
+                        log.innerHTML += '🚀 [أمر تغيير وتشغيل]: تم الإرسال لـ ' + data.clients + ' متصفح بنجاح!<br>';
                         log.scrollTop = log.scrollHeight;
                     }).catch(err => {
                         alert('❌ خطأ في الاتصال بالسيرفر');
                     });
                 }
 
-                // دالة التقسيم الذكي 50/50
                 function magicSplit() {
                     const pc = document.getElementById('targetPc').value;
                     if(!confirm("هل أنت متأكد من تقسيم المتصفحات مناصفة بالترتيب بين كازا والرباط؟")) return;
@@ -404,7 +427,6 @@ app.post('/api/broadcast', (req, res) => {
     res.json({ success: true, clients: count });
 });
 
-// مسار التقسيم الذكي 50/50
 app.post('/api/magic-split', (req, res) => {
     const { targetPc, country, visaType, subType, category } = req.body;
     const target = targetPc ? targetPc.toLowerCase() : "all";
@@ -425,7 +447,7 @@ app.post('/api/magic-split', (req, res) => {
     const half = Math.ceil(numClients / 2);
     
     eligibleClients.forEach((client, index) => {
-        let assignedCity = (index < half) ? "Casablanca" : "Rabat"; // الترتيب: النصف الأول كازا، الثاني رباط
+        let assignedCity = (index < half) ? "Casablanca" : "Rabat"; 
         client.send(JSON.stringify({
             action: "CHANGE_PROFILE", 
             country: country, 
@@ -461,7 +483,6 @@ app.post('/api/bulk-distribute', (req, res) => {
     
     for (let i = 0; i < numClients; i++) {
         if (accounts[i]) { 
-            // تحديد المدينة (من الملف إذا وجدت، أو من القائمة)
             let finalCity = accounts[i].customCity !== "" ? accounts[i].customCity : city;
 
             eligibleClients[i].send(JSON.stringify({
@@ -478,7 +499,6 @@ app.post('/api/bulk-distribute', (req, res) => {
     res.json({ success: true, distributedTo: distributedCount, totalAccounts: distributedCount });
 });
 
-// حل مشكلة ثقل السيرفر (Zombie Connections Fix)
 wss.on('connection', (ws) => {
     ws.pcId = "unknown"; 
     ws.isAlive = true; 
