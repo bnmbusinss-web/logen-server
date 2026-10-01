@@ -22,9 +22,16 @@ app.get('/', (req, res) => {
                 :root { --bg-base: #09090b; --bg-surface: #18181b; --bg-input: #000000; --border-light: #27272a; --border-focus: #52525b; --text-main: #fafafa; --text-muted: #a1a1aa; --accent: #ffffff; --accent-hover: #e4e4e7; }
                 body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg-base); color: var(--text-main); padding: 30px 15px; margin: 0; }
                 .container { max-width: 600px; margin: 0 auto; background: var(--bg-surface); padding: 30px; border-radius: 16px; border: 1px solid var(--border-light); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);}
-                header { text-align: center; margin-bottom: 30px; }
+                header { text-align: center; margin-bottom: 20px; }
                 h1 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: 3px; }
                 .subtitle { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-top: 5px; text-transform: uppercase; }
+                
+                /* ستايل الأزرار الجديدة (إسبانيا والبرتغال) */
+                .tabs-container { display: flex; gap: 10px; margin-bottom: 25px; }
+                .tab-btn { flex: 1; padding: 14px; text-align: center; font-size: 15px; font-weight: 800; border-radius: 10px; cursor: pointer; transition: all 0.3s; color: #fff; border: 2px solid transparent; background: #1e293b; border-color: #334155; }
+                .tab-pt.active { background: #046b46; border-color: #ffc400; box-shadow: 0 0 15px rgba(4,107,70,0.5); }
+                .tab-es.active { background: #da291c; border-color: #ffc400; box-shadow: 0 0 15px rgba(218,41,28,0.5); }
+                
                 .stats { text-align: center; margin-bottom: 25px; font-size: 13px; color: #22c55e; background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: 10px; border: 1px solid rgba(34, 197, 94, 0.2); font-weight: 600; transition: all 0.3s;}
                 .form-group { margin-bottom: 16px; }
                 label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 500; color: var(--text-muted); }
@@ -43,8 +50,14 @@ app.get('/', (req, res) => {
             <div class="container">
                 <header>
                     <h1>SAMURAI</h1>
-                    <div class="subtitle">Cloud Command Center</div>
+                    <div class="subtitle" id="country-subtitle">Cloud Command Center - ES</div>
                 </header>
+
+                <!-- أزرار التبديل بين الدول -->
+                <div class="tabs-container">
+                    <div id="tab-pt" class="tab-btn tab-pt" onclick="switchCountry('PT')">🇵🇹 البرتغال PT</div>
+                    <div id="tab-es" class="tab-btn tab-es active" onclick="switchCountry('ES')">🇪🇸 إسبانيا ES</div>
+                </div>
                 
                 <div class="stats" id="stats">📡 جاري الاتصال بالمتصفحات...</div>
 
@@ -80,7 +93,7 @@ app.get('/', (req, res) => {
                     <select id="category"></select>
                 </div>
 
-                <button onclick="sendCommand()">إرسال أمر التشغيل (العميل النشط) 🚀</button>
+                <button onclick="sendCommand()" id="btn-send">إرسال أمر التشغيل (العميل النشط) 🚀</button>
 
                 <div class="form-group" style="margin-top: 25px; border-top: 1px solid var(--border-light); padding-top: 20px;">
                     <label style="color: #38bdf8; font-weight: 700; font-size: 14px;">📦 نظام التوزيع الصارم (إيميل واحد لكل نافذة)</label>
@@ -99,24 +112,17 @@ app.get('/', (req, res) => {
             </div>
 
             <script>
-                const N_LOCATIONS = ["Rabat","Casablanca","Tangier","Agadir","Tetouan","Nador"];
-                const N_VISATYPES = ["National Visa","Schengen Visa"];
-                const N_CATEGORIES = ["Normal","Premium","Prime Time"];
-                const N_SUBTYPES = ["Schengen Visa", "Student Visa", "Family Reunification Visa", "National Visa", "Work Visa", "Casa 1", "Casa 2", "Students Less than 6 Months (SSU).", "Non-university students", "Schengen Visa – With Prior Schengen Visa 2023"];
+                // متغير يحدد الدولة النشطة في لوحة التحكم
+                let CURRENT_COUNTRY = 'ES';
 
-                function fillSelect(id, items, selectedValue) {
-                    const select = document.getElementById(id);
-                    select.innerHTML = "";
-                    items.forEach(v => {
-                        const opt = document.createElement("option");
-                        opt.value = v;
-                        opt.textContent = v;
-                        select.appendChild(opt);
-                    });
-                    if(selectedValue && items.includes(selectedValue)) select.value = selectedValue;
-                }
-
-                function getSubtypes(location, visatype) {
+                // ======================================
+                // بيانات إسبانيا (ES)
+                // ======================================
+                const ES_LOCATIONS = ["Rabat","Casablanca","Tangier","Agadir","Tetouan","Nador"];
+                const ES_VISATYPES = ["National Visa","Schengen Visa"];
+                const SHARED_CATEGORIES = ["Normal","Premium","Prime Time"];
+                
+                function getSubtypesES(location, visatype) {
                     if (location === "Casablanca") {
                         if (visatype === "Schengen Visa") return ["Casa 1", "Casa 2"];
                         if (visatype === "National Visa") return ["Work Visa", "Student Visa", "Family Reunification Visa", "National Visa"];
@@ -130,32 +136,113 @@ app.get('/', (req, res) => {
                         if (location === "Agadir") return ["Non-university students"];
                         return ["National Visa", "Student Visa", "Family Reunification Visa", "Work Visa"]; 
                     }
-                    return N_SUBTYPES; 
+                    return ["Schengen Visa"]; 
+                }
+
+                // ======================================
+                // بيانات البرتغال (PT)
+                // ======================================
+                const PT_LOCATIONS = ["Casablanca", "Rabat"];
+                const PT_VISATYPES = ["Long Stay Visa", "Short Stay Visa"];
+
+                function getSubtypesPT(location, visatype) {
+                    if (visatype === "Long Stay Visa") {
+                        return [
+                            "Academic or Professional Training Course",
+                            "Any other category of Long-Stay visa",
+                            "Family Member of Portuguese Citizen for family reunification ",
+                            "Family Reunification  ",
+                            "Higher Education Studies",
+                            "Highly Qualified Activity",
+                            "Work"
+                        ];
+                    }
+                    if (visatype === "Short Stay Visa") {
+                        return [
+                            "Business or other professional reason ",
+                            "Family Member of EU Citizen - Directive 2004/38/EC",
+                            "Spouse of Portuguese citizen for a short visit to Portugal  ",
+                            "Short Stay Visa"
+                        ];
+                    }
+                    return [];
+                }
+
+                // ======================================
+                // وظائف تحديث القوائم المنسدلة
+                // ======================================
+                function fillSelect(id, items, selectedValue) {
+                    const select = document.getElementById(id);
+                    select.innerHTML = "";
+                    items.forEach(v => {
+                        const opt = document.createElement("option");
+                        opt.value = v;
+                        opt.textContent = v;
+                        select.appendChild(opt);
+                    });
+                    if(selectedValue && items.includes(selectedValue)) select.value = selectedValue;
                 }
 
                 function updateSubTypes() {
                     const loc = document.getElementById("city").value;
                     const vType = document.getElementById("visaType").value;
-                    const available = getSubtypes(loc, vType);
-                    let target = available.includes("Schengen Visa") ? "Schengen Visa" : available[0];
-                    fillSelect("subType", available, target);
+                    let available = [];
+
+                    if (CURRENT_COUNTRY === 'ES') {
+                        available = getSubtypesES(loc, vType);
+                    } else {
+                        available = getSubtypesPT(loc, vType);
+                    }
+
+                    fillSelect("subType", available, available[0]);
                 }
 
                 function updateVisaTypes() {
                     const loc = document.getElementById("city").value;
-                    const autoSchengen = ["Rabat", "Tangier", "Tetouan", "Agadir", "Nador"];
-                    let targetVisa = autoSchengen.includes(loc) ? "Schengen Visa" : "Schengen Visa";
-                    fillSelect("visaType", N_VISATYPES, targetVisa);
+                    
+                    if (CURRENT_COUNTRY === 'ES') {
+                        const autoSchengen = ["Rabat", "Tangier", "Tetouan", "Agadir", "Nador"];
+                        let targetVisa = autoSchengen.includes(loc) ? "Schengen Visa" : "Schengen Visa";
+                        fillSelect("visaType", ES_VISATYPES, targetVisa);
+                    } else {
+                        fillSelect("visaType", PT_VISATYPES, PT_VISATYPES[1]); // Short Stay default
+                    }
                     updateSubTypes();
                 }
 
-                fillSelect("city", N_LOCATIONS, "Casablanca");
-                fillSelect("category", N_CATEGORIES, "Normal");
-                updateVisaTypes();
+                // التبديل بين الدول
+                function switchCountry(country) {
+                    CURRENT_COUNTRY = country;
+                    
+                    // تغيير واجهة الأزرار
+                    document.getElementById('tab-pt').classList.toggle('active', country === 'PT');
+                    document.getElementById('tab-es').classList.toggle('active', country === 'ES');
+                    document.getElementById('country-subtitle').innerText = "Cloud Command Center - " + country;
+                    
+                    // تغيير الألوان قليلاً للتمييز
+                    document.getElementById('btn-send').style.background = country === 'PT' ? '#046b46' : '#ffffff';
+                    document.getElementById('btn-send').style.color = country === 'PT' ? '#ffffff' : '#000000';
 
+                    // تحديث القوائم
+                    if (country === 'ES') {
+                        fillSelect("city", ES_LOCATIONS, "Casablanca");
+                    } else {
+                        fillSelect("city", PT_LOCATIONS, "Casablanca");
+                    }
+                    fillSelect("category", SHARED_CATEGORIES, "Normal");
+                    updateVisaTypes();
+                }
+
+                // الأحداث (Listeners)
                 document.getElementById("city").addEventListener("change", updateVisaTypes);
                 document.getElementById("visaType").addEventListener("change", updateSubTypes);
 
+                // التهيئة الافتراضية عند فتح الصفحة
+                switchCountry('ES');
+
+                // ======================================
+                // إحصائيات الاتصال
+                // ======================================
                 let currentStats = { total: 0, details: {} };
                 function updateStatsUI() {
                     const selectedPc = document.getElementById('targetPc').value.toLowerCase();
@@ -177,6 +264,9 @@ app.get('/', (req, res) => {
                 }
                 setInterval(fetchStats, 3000); fetchStats();
 
+                // ======================================
+                // رفع الملفات والتوزيع
+                // ======================================
                 window.uploadedAccounts = [];
                 function handleFileUpload(event) {
                     const file = event.target.files[0];
@@ -205,6 +295,7 @@ app.get('/', (req, res) => {
                     if (window.uploadedAccounts.length === 0) return alert("الملف فارغ!");
                     
                     const payload = {
+                        country: CURRENT_COUNTRY, // إضافة الدولة إلى الطلب
                         accounts: window.uploadedAccounts,
                         targetPc: document.getElementById('targetPc').value,
                         city: document.getElementById('city').value,
@@ -222,7 +313,7 @@ app.get('/', (req, res) => {
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
                         if(data.success) {
-                            log.innerHTML += '📦 [اكتمل التوزيع الصارم]: تم إرسال ' + data.distributedTo + ' حساب لـ ' + data.distributedTo + ' متصفحات!<br>';
+                            log.innerHTML += '📦 [التوزيع لـ ' + CURRENT_COUNTRY + ']: تم إرسال ' + data.distributedTo + ' حساب لـ ' + data.distributedTo + ' متصفحات!<br>';
                             window.uploadedAccounts = [];
                             document.getElementById('distributeBtn').style.display = 'none';
                             document.getElementById('bulkUpload').value = '';
@@ -234,10 +325,13 @@ app.get('/', (req, res) => {
                     }).catch(err => { alert('❌ خطأ في الاتصال'); });
                 }
 
-                // 🔴 دالة الزر الأبيض لتغيير المدينة والفيزا يومياً للعميل النشط
+                // ======================================
+                // أمر تغيير وتفعيل العميل (التشغيل اليومي)
+                // ======================================
                 function sendCommand() {
                     const payload = {
                         action: "CHANGE_PROFILE", 
+                        country: CURRENT_COUNTRY, // إضافة الدولة إلى الطلب
                         targetPc: document.getElementById('targetPc').value,
                         city: document.getElementById('city').value, 
                         visaType: document.getElementById('visaType').value,
@@ -251,7 +345,7 @@ app.get('/', (req, res) => {
                         body: JSON.stringify(payload) 
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
-                        log.innerHTML += '🚀 [أمر التحديث اليومي]: تم إرسال إعدادات (' + payload.city + ') إلى ' + data.clients + ' متصفح بنجاح!<br>';
+                        log.innerHTML += '🚀 [أمر تشغيل ' + CURRENT_COUNTRY + ']: تم الإرسال لـ ' + data.clients + ' متصفح بنجاح!<br>';
                         log.scrollTop = log.scrollHeight;
                     }).catch(err => {
                         alert('❌ خطأ في الاتصال بالسيرفر');
@@ -262,6 +356,10 @@ app.get('/', (req, res) => {
         </html>
     `);
 });
+
+// ============================================
+// الجزء الخاص بالـ Backend Server
+// ============================================
 
 app.get('/api/stats', (req, res) => {
     let stats = { total: 0, details: {} };
@@ -289,7 +387,7 @@ app.post('/api/broadcast', (req, res) => {
 });
 
 app.post('/api/bulk-distribute', (req, res) => {
-    const { accounts, city, visaType, subType, category, targetPc } = req.body;
+    const { accounts, country, city, visaType, subType, category, targetPc } = req.body;
     const target = targetPc ? targetPc.toLowerCase() : "all";
     
     let eligibleClients = [];
@@ -313,6 +411,7 @@ app.post('/api/bulk-distribute', (req, res) => {
         if (accounts[i]) { 
             eligibleClients[i].send(JSON.stringify({
                 action: "BULK_ADD_PROFILES",
+                country: country, // إرسال الدولة كجزء من الأمر
                 profiles: [ accounts[i] ], 
                 city, visaType, subType, category
             }));
