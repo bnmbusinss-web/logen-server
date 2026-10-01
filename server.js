@@ -16,20 +16,15 @@ app.get('/', (req, res) => {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>SAMURAI COMMANDER - Data Center</title>
+            <title>SAMURAI COMMANDER - Spain</title>
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
             <style>
                 :root { --bg-base: #09090b; --bg-surface: #18181b; --bg-input: #000000; --border-light: #27272a; --border-focus: #52525b; --text-main: #fafafa; --text-muted: #a1a1aa; --accent: #ffffff; --accent-hover: #e4e4e7; }
                 body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg-base); color: var(--text-main); padding: 30px 15px; margin: 0; }
                 .container { max-width: 600px; margin: 0 auto; background: var(--bg-surface); padding: 30px; border-radius: 16px; border: 1px solid var(--border-light); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);}
-                header { text-align: center; margin-bottom: 20px; }
-                h1 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: 3px; }
+                header { text-align: center; margin-bottom: 25px; }
+                h1 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: 3px; color: #da291c; } /* لون إسبانيا */
                 .subtitle { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-top: 5px; text-transform: uppercase; }
-                
-                .tabs-container { display: flex; gap: 10px; margin-bottom: 15px; } /* تم تقليل المسافة لتناسب الزر الجديد */
-                .tab-btn { flex: 1; padding: 14px; text-align: center; font-size: 15px; font-weight: 800; border-radius: 10px; cursor: pointer; transition: all 0.3s; color: #fff; border: 2px solid transparent; background: #1e293b; border-color: #334155; }
-                .tab-pt.active { background: #046b46; border-color: #ffc400; box-shadow: 0 0 15px rgba(4,107,70,0.5); }
-                .tab-es.active { background: #da291c; border-color: #ffc400; box-shadow: 0 0 15px rgba(218,41,28,0.5); }
                 
                 /* 🔴 ستايل زر التشغيل السريع الجديد */
                 .btn-start-only { width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 10px; border: none; background: #3b82f6; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
@@ -40,8 +35,8 @@ app.get('/', (req, res) => {
                 label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 500; color: var(--text-muted); }
                 select { width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text-main); font-size: 14px; outline: none; transition: 0.2s; appearance: none; }
                 select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 1px var(--border-focus); }
-                button { width: 100%; padding: 16px; margin-top: 20px; border-radius: 10px; border: none; background: var(--accent); color: #000; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-                button:hover { background: var(--accent-hover); transform: translateY(-1px); }
+                button { width: 100%; padding: 16px; margin-top: 20px; border-radius: 10px; border: none; background: #da291c; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+                button:hover { background: #b91c1c; transform: translateY(-1px); }
                 .btn-outline { background: transparent; color: #38bdf8; border: 1px solid #38bdf8; margin-top: 5px; }
                 .btn-outline:hover { background: rgba(56, 189, 248, 0.1); }
                 .btn-green { background: #22c55e; color: #000; }
@@ -56,16 +51,11 @@ app.get('/', (req, res) => {
         <body>
             <div class="container">
                 <header>
-                    <h1>SAMURAI</h1>
-                    <div class="subtitle" id="country-subtitle">Cloud Command Center - ES</div>
+                    <h1>🇪🇸 SAMURAI SPAIN</h1>
+                    <div class="subtitle">Cloud Command Center - ES Only</div>
                 </header>
 
-                <div class="tabs-container">
-                    <div id="tab-es" class="tab-btn tab-es active" onclick="switchCountry('ES')">🇪🇸 إسبانيا ES</div>
-                    <div id="tab-pt" class="tab-btn tab-pt" onclick="switchCountry('PT')">🇵🇹 البرتغال PT</div>
-                </div>
-                
-                <!-- 🔴 الزر الجديد: تشغيل فقط دون تغيير الإعدادات -->
+                <!-- 🔴 الزر الأزرق: تشغيل فقط دون تغيير الإعدادات -->
                 <button class="btn-start-only" onclick="startWithoutChange()">▶️ تشغيل المتصفحات فقط (بدون تغيير الإعدادات)</button>
 
                 <div class="stats" id="stats">📡 جاري الاتصال بالمتصفحات...</div>
@@ -125,13 +115,12 @@ app.get('/', (req, res) => {
                 </div>
 
                 <div class="log" id="log">
-                    > نظام Samurai السحابي جاهز...<br>
+                    > نظام Samurai السحابي (إسبانيا) جاهز...<br>
                 </div>
             </div>
 
             <script>
-                let CURRENT_COUNTRY = 'ES';
-
+                // بيانات إسبانيا فقط
                 const ES_LOCATIONS = ["Rabat","Casablanca","Tangier","Agadir","Tetouan","Nador"];
                 const ES_VISATYPES = ["National Visa","Schengen Visa"];
                 const SHARED_CATEGORIES = ["Normal","Premium","Prime Time"];
@@ -153,32 +142,6 @@ app.get('/', (req, res) => {
                     return ["Schengen Visa"]; 
                 }
 
-                const PT_LOCATIONS = ["Casablanca", "Rabat"];
-                const PT_VISATYPES = ["Long Stay Visa", "Short Stay Visa"];
-
-                function getSubtypesPT(location, visatype) {
-                    if (visatype === "Long Stay Visa") {
-                        return [
-                            "Academic or Professional Training Course",
-                            "Any other category of Long-Stay visa",
-                            "Family Member of Portuguese Citizen for family reunification ",
-                            "Family Reunification  ",
-                            "Higher Education Studies",
-                            "Highly Qualified Activity",
-                            "Work"
-                        ];
-                    }
-                    if (visatype === "Short Stay Visa") {
-                        return [
-                            "Business or other professional reason ",
-                            "Family Member of EU Citizen - Directive 2004/38/EC",
-                            "Spouse of Portuguese citizen for a short visit to Portugal  ",
-                            "Short Stay Visa"
-                        ];
-                    }
-                    return [];
-                }
-
                 function fillSelect(id, items, selectedValue) {
                     const select = document.getElementById(id);
                     select.innerHTML = "";
@@ -194,54 +157,27 @@ app.get('/', (req, res) => {
                 function updateSubTypes() {
                     const loc = document.getElementById("city").value;
                     const vType = document.getElementById("visaType").value;
-                    let available = [];
-
-                    if (CURRENT_COUNTRY === 'ES') {
-                        available = getSubtypesES(loc, vType);
-                    } else {
-                        available = getSubtypesPT(loc, vType);
-                    }
-
+                    let available = getSubtypesES(loc, vType);
                     fillSelect("subType", available, available[0]);
                 }
 
                 function updateVisaTypes() {
                     const loc = document.getElementById("city").value;
-                    
-                    if (CURRENT_COUNTRY === 'ES') {
-                        const autoSchengen = ["Rabat", "Tangier", "Tetouan", "Agadir", "Nador"];
-                        let targetVisa = autoSchengen.includes(loc) ? "Schengen Visa" : "Schengen Visa";
-                        fillSelect("visaType", ES_VISATYPES, targetVisa);
-                    } else {
-                        fillSelect("visaType", PT_VISATYPES, PT_VISATYPES[1]); // Short Stay default
-                    }
+                    const autoSchengen = ["Rabat", "Tangier", "Tetouan", "Agadir", "Nador"];
+                    let targetVisa = autoSchengen.includes(loc) ? "Schengen Visa" : "Schengen Visa";
+                    fillSelect("visaType", ES_VISATYPES, targetVisa);
                     updateSubTypes();
                 }
 
-                function switchCountry(country) {
-                    CURRENT_COUNTRY = country;
-                    
-                    document.getElementById('tab-pt').classList.toggle('active', country === 'PT');
-                    document.getElementById('tab-es').classList.toggle('active', country === 'ES');
-                    document.getElementById('country-subtitle').innerText = "Cloud Command Center - " + country;
-                    
-                    document.getElementById('btn-send').style.background = country === 'PT' ? '#046b46' : '#ffffff';
-                    document.getElementById('btn-send').style.color = country === 'PT' ? '#ffffff' : '#000000';
-
-                    if (country === 'ES') {
-                        fillSelect("city", ES_LOCATIONS, "Casablanca");
-                    } else {
-                        fillSelect("city", PT_LOCATIONS, "Casablanca");
-                    }
-                    fillSelect("category", SHARED_CATEGORIES, "Normal");
-                    updateVisaTypes();
-                }
+                // تهيئة القوائم الأولية
+                fillSelect("city", ES_LOCATIONS, "Casablanca");
+                fillSelect("category", SHARED_CATEGORIES, "Normal");
+                updateVisaTypes();
 
                 document.getElementById("city").addEventListener("change", updateVisaTypes);
                 document.getElementById("visaType").addEventListener("change", updateSubTypes);
 
-                switchCountry('ES');
-
+                // الإحصائيات
                 let currentStats = { total: 0, details: {} };
                 function updateStatsUI() {
                     const selectedPc = document.getElementById('targetPc').value.toLowerCase();
@@ -261,9 +197,9 @@ app.get('/', (req, res) => {
                         currentStats = data; updateStatsUI();
                     }).catch(e => {});
                 }
-                
                 setInterval(fetchStats, 10000); fetchStats();
 
+                // التوزيع بالملف
                 window.uploadedAccounts = [];
                 function handleFileUpload(event) {
                     const file = event.target.files[0];
@@ -291,9 +227,8 @@ app.get('/', (req, res) => {
 
                 function distributeAccounts() {
                     if (window.uploadedAccounts.length === 0) return alert("الملف فارغ!");
-                    
                     const payload = {
-                        country: CURRENT_COUNTRY, 
+                        country: "ES", 
                         accounts: window.uploadedAccounts,
                         targetPc: document.getElementById('targetPc').value,
                         city: document.getElementById('city').value,
@@ -301,7 +236,6 @@ app.get('/', (req, res) => {
                         subType: document.getElementById('subType').value,
                         category: document.getElementById('category').value
                     };
-                    
                     document.getElementById('distributeBtn').innerText = '⏳ جاري التقسيم والتوزيع...';
                     
                     fetch('/api/bulk-distribute', {
@@ -311,7 +245,7 @@ app.get('/', (req, res) => {
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
                         if(data.success) {
-                            log.innerHTML += '📦 [التوزيع لـ ' + CURRENT_COUNTRY + ']: تم إرسال ' + data.distributedTo + ' حساب لـ ' + data.distributedTo + ' متصفحات!<br>';
+                            log.innerHTML += '📦 [التوزيع]: تم إرسال ' + data.distributedTo + ' حساب لـ ' + data.distributedTo + ' متصفحات!<br>';
                             window.uploadedAccounts = [];
                             document.getElementById('distributeBtn').style.display = 'none';
                             document.getElementById('bulkUpload').value = '';
@@ -323,18 +257,16 @@ app.get('/', (req, res) => {
                     }).catch(err => { alert('❌ خطأ في الاتصال'); });
                 }
 
-                // 🔴 الدالة الجديدة الخاصة بالزر الأزرق (تشغيل فقط دون تغيير)
+                // 🔴 زر التشغيل الأزرق
                 function startWithoutChange() {
                     const pc = document.getElementById('targetPc').value;
                     const payload = { 
                         action: "START_ONLY", 
-                        country: CURRENT_COUNTRY, 
+                        country: "ES", 
                         targetPc: pc 
                     };
                     fetch('/api/broadcast', { 
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify(payload) 
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
                         log.innerHTML += '▶️ [أمر تشغيل فقط]: تم إرسال إشارة الانطلاق لـ ' + data.clients + ' متصفح!<br>';
@@ -342,50 +274,43 @@ app.get('/', (req, res) => {
                     }).catch(err => alert('❌ خطأ في الاتصال'));
                 }
 
+                // زر التغيير الأخضر
                 function sendCommand() {
                     const payload = {
                         action: "CHANGE_PROFILE", 
-                        country: CURRENT_COUNTRY, 
+                        country: "ES", 
                         targetPc: document.getElementById('targetPc').value,
                         city: document.getElementById('city').value, 
                         visaType: document.getElementById('visaType').value,
                         subType: document.getElementById('subType').value, 
                         category: document.getElementById('category').value
                     };
-                    
                     fetch('/api/broadcast', { 
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify(payload) 
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
                         log.innerHTML += '🚀 [أمر تغيير وتشغيل]: تم الإرسال لـ ' + data.clients + ' متصفح بنجاح!<br>';
                         log.scrollTop = log.scrollHeight;
-                    }).catch(err => {
-                        alert('❌ خطأ في الاتصال بالسيرفر');
-                    });
+                    }).catch(err => { alert('❌ خطأ في الاتصال بالسيرفر'); });
                 }
 
+                // زر التقسيم الذكي
                 function magicSplit() {
                     const pc = document.getElementById('targetPc').value;
                     if(!confirm("هل أنت متأكد من تقسيم المتصفحات مناصفة بالترتيب بين كازا والرباط؟")) return;
-
                     const payload = {
-                        country: CURRENT_COUNTRY, 
+                        country: "ES", 
                         targetPc: pc,
                         visaType: document.getElementById('visaType').value,
                         subType: document.getElementById('subType').value, 
                         category: document.getElementById('category').value
                     };
-                    
                     fetch('/api/magic-split', { 
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify(payload) 
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
                     }).then(res => res.json()).then(data => {
                         const log = document.getElementById('log');
                         if(data.success) {
-                            log.innerHTML += "🌓 [تقسيم ذكي - " + CURRENT_COUNTRY + "]: تم توجيه النصف لكازا والنصف للرباط (" + data.clients + " نافذة)!<br>";
+                            log.innerHTML += "🌓 [تقسيم ذكي]: تم توجيه النصف لكازا والنصف للرباط (" + data.clients + " نافذة)!<br>";
                         } else {
                             log.innerHTML += "❌ [خطأ]: " + data.error + "<br>";
                         }
@@ -399,7 +324,7 @@ app.get('/', (req, res) => {
 });
 
 // ============================================
-// الجزء الخاص بالـ Backend Server
+// الجزء الخاص بالـ Backend Server (لإسبانيا فقط)
 // ============================================
 
 app.get('/api/stats', (req, res) => {
@@ -430,81 +355,57 @@ app.post('/api/broadcast', (req, res) => {
 app.post('/api/magic-split', (req, res) => {
     const { targetPc, country, visaType, subType, category } = req.body;
     const target = targetPc ? targetPc.toLowerCase() : "all";
-    
     let eligibleClients = [];
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN && client.pcId && client.pcId !== "unknown") {
-            if (target === "all" || client.pcId === target) {
-                eligibleClients.push(client); 
-            }
+            if (target === "all" || client.pcId === target) { eligibleClients.push(client); }
         }
     });
-
     const numClients = eligibleClients.length;
     if (numClients === 0) return res.json({ success: false, error: "لا يوجد متصفحات متصلة." });
-
     let count = 0;
     const half = Math.ceil(numClients / 2);
-    
     eligibleClients.forEach((client, index) => {
         let assignedCity = (index < half) ? "Casablanca" : "Rabat"; 
         client.send(JSON.stringify({
             action: "CHANGE_PROFILE", 
-            country: country, 
-            city: assignedCity, 
-            visaType, subType, category
+            country: country, city: assignedCity, visaType, subType, category
         }));
         count++;
     });
-
     res.json({ success: true, clients: count });
 });
 
 app.post('/api/bulk-distribute', (req, res) => {
     const { accounts, country, city, visaType, subType, category, targetPc } = req.body;
     const target = targetPc ? targetPc.toLowerCase() : "all";
-    
     let eligibleClients = [];
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN && client.pcId && client.pcId !== "unknown") {
-            if (target === "all" || client.pcId === target) {
-                eligibleClients.push(client); 
-            }
+            if (target === "all" || client.pcId === target) { eligibleClients.push(client); }
         }
     });
-
     const numClients = eligibleClients.length;
-
-    if (numClients === 0) {
-        return res.json({ success: false, error: "لا يوجد متصفحات مستهدفة متصلة حالياً." });
-    }
-
+    if (numClients === 0) return res.json({ success: false, error: "لا يوجد متصفحات مستهدفة متصلة حالياً." });
     let distributedCount = 0;
-    
     for (let i = 0; i < numClients; i++) {
         if (accounts[i]) { 
             let finalCity = accounts[i].customCity !== "" ? accounts[i].customCity : city;
-
             eligibleClients[i].send(JSON.stringify({
                 action: "BULK_ADD_PROFILES",
-                country: country, 
-                profiles: [ accounts[i] ], 
-                city: finalCity, 
-                visaType, subType, category
+                country: country, profiles: [ accounts[i] ], city: finalCity, visaType, subType, category
             }));
             distributedCount++;
         }
     }
-
     res.json({ success: true, distributedTo: distributedCount, totalAccounts: distributedCount });
 });
 
+// حل مشكلة ثقل السيرفر (منظف الاتصالات)
 wss.on('connection', (ws) => {
     ws.pcId = "unknown"; 
     ws.isAlive = true; 
-    
     ws.on('pong', () => { ws.isAlive = true; }); 
-
     ws.on('message', (message) => {
         try {
             const data = JSON.parse(message);
@@ -512,12 +413,10 @@ wss.on('connection', (ws) => {
         } catch (e) {}
     });
 });
-
 setInterval(() => {
     wss.clients.forEach(client => {
         if (client.isAlive === false) return client.terminate(); 
-        client.isAlive = false; 
-        client.ping(); 
+        client.isAlive = false; client.ping(); 
         if (client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify({ action: "PING" })); 
         }
