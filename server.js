@@ -23,10 +23,9 @@ app.get('/', (req, res) => {
                 body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg-base); color: var(--text-main); padding: 30px 15px; margin: 0; }
                 .container { max-width: 600px; margin: 0 auto; background: var(--bg-surface); padding: 30px; border-radius: 16px; border: 1px solid var(--border-light); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);}
                 header { text-align: center; margin-bottom: 25px; }
-                h1 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: 3px; color: #da291c; } /* لون إسبانيا */
+                h1 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: 3px; color: #da291c; } 
                 .subtitle { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-top: 5px; text-transform: uppercase; }
                 
-                /* 🔴 ستايل زر التشغيل السريع الجديد */
                 .btn-start-only { width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 10px; border: none; background: #3b82f6; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
                 .btn-start-only:hover { background: #2563eb; transform: translateY(-1px); }
 
@@ -42,9 +41,6 @@ app.get('/', (req, res) => {
                 .btn-green { background: #22c55e; color: #000; }
                 .btn-green:hover { background: #16a34a; }
                 
-                .btn-magic { background: transparent; color: #f59e0b; border: 1px solid #f59e0b; margin-top: 5px; }
-                .btn-magic:hover { background: rgba(245, 158, 11, 0.1); }
-
                 .log { background: var(--bg-input); padding: 15px; margin-top: 25px; height: 160px; overflow-y: auto; border-radius: 10px; font-family: monospace; font-size: 12px; color: #22c55e; border: 1px solid var(--border-light); line-height: 1.6;}
             </style>
         </head>
@@ -55,7 +51,7 @@ app.get('/', (req, res) => {
                     <div class="subtitle">Cloud Command Center - ES Only</div>
                 </header>
 
-                <!-- 🔴 الزر الأزرق: تشغيل فقط دون تغيير الإعدادات -->
+                <!-- الزر الأزرق: تشغيل فقط دون تغيير الإعدادات -->
                 <button class="btn-start-only" onclick="startWithoutChange()">▶️ تشغيل المتصفحات فقط (بدون تغيير الإعدادات)</button>
 
                 <div class="stats" id="stats">📡 جاري الاتصال بالمتصفحات...</div>
@@ -94,14 +90,6 @@ app.get('/', (req, res) => {
 
                 <button onclick="sendCommand()" id="btn-send">حفظ الإعدادات الجديدة + تشغيل 🚀</button>
 
-                <!-- قسم التقسيم الذكي 50/50 -->
-                <div class="form-group" style="margin-top: 25px; border-top: 1px solid var(--border-light); padding-top: 20px;">
-                    <label style="color: #f59e0b; font-weight: 700; font-size: 14px;">🌓 نظام التقسيم السريع (نصف كازا / نصف رباط)</label>
-                    <button class="btn-magic" onclick="magicSplit()">
-                        تقسيم نوافذ هذا الحاسوب 50/50 🌓
-                    </button>
-                </div>
-
                 <!-- قسم التوزيع بالملف -->
                 <div class="form-group" style="margin-top: 25px; border-top: 1px solid var(--border-light); padding-top: 20px;">
                     <label style="color: #38bdf8; font-weight: 700; font-size: 14px;">📦 نظام التوزيع الصارم (إيميل واحد لكل نافذة)</label>
@@ -120,7 +108,6 @@ app.get('/', (req, res) => {
             </div>
 
             <script>
-                // بيانات إسبانيا فقط
                 const ES_LOCATIONS = ["Rabat","Casablanca","Tangier","Agadir","Tetouan","Nador"];
                 const ES_VISATYPES = ["National Visa","Schengen Visa"];
                 const SHARED_CATEGORIES = ["Normal","Premium","Prime Time"];
@@ -169,7 +156,6 @@ app.get('/', (req, res) => {
                     updateSubTypes();
                 }
 
-                // تهيئة القوائم الأولية
                 fillSelect("city", ES_LOCATIONS, "Casablanca");
                 fillSelect("category", SHARED_CATEGORIES, "Normal");
                 updateVisaTypes();
@@ -177,7 +163,6 @@ app.get('/', (req, res) => {
                 document.getElementById("city").addEventListener("change", updateVisaTypes);
                 document.getElementById("visaType").addEventListener("change", updateSubTypes);
 
-                // الإحصائيات
                 let currentStats = { total: 0, details: {} };
                 function updateStatsUI() {
                     const selectedPc = document.getElementById('targetPc').value.toLowerCase();
@@ -199,7 +184,6 @@ app.get('/', (req, res) => {
                 }
                 setInterval(fetchStats, 10000); fetchStats();
 
-                // التوزيع بالملف
                 window.uploadedAccounts = [];
                 function handleFileUpload(event) {
                     const file = event.target.files[0];
@@ -257,7 +241,6 @@ app.get('/', (req, res) => {
                     }).catch(err => { alert('❌ خطأ في الاتصال'); });
                 }
 
-                // 🔴 زر التشغيل الأزرق
                 function startWithoutChange() {
                     const pc = document.getElementById('targetPc').value;
                     const payload = { 
@@ -274,7 +257,6 @@ app.get('/', (req, res) => {
                     }).catch(err => alert('❌ خطأ في الاتصال'));
                 }
 
-                // زر التغيير الأخضر
                 function sendCommand() {
                     const payload = {
                         action: "CHANGE_PROFILE", 
@@ -292,30 +274,6 @@ app.get('/', (req, res) => {
                         log.innerHTML += '🚀 [أمر تغيير وتشغيل]: تم الإرسال لـ ' + data.clients + ' متصفح بنجاح!<br>';
                         log.scrollTop = log.scrollHeight;
                     }).catch(err => { alert('❌ خطأ في الاتصال بالسيرفر'); });
-                }
-
-                // زر التقسيم الذكي
-                function magicSplit() {
-                    const pc = document.getElementById('targetPc').value;
-                    if(!confirm("هل أنت متأكد من تقسيم المتصفحات مناصفة بالترتيب بين كازا والرباط؟")) return;
-                    const payload = {
-                        country: "ES", 
-                        targetPc: pc,
-                        visaType: document.getElementById('visaType').value,
-                        subType: document.getElementById('subType').value, 
-                        category: document.getElementById('category').value
-                    };
-                    fetch('/api/magic-split', { 
-                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
-                    }).then(res => res.json()).then(data => {
-                        const log = document.getElementById('log');
-                        if(data.success) {
-                            log.innerHTML += "🌓 [تقسيم ذكي]: تم توجيه النصف لكازا والنصف للرباط (" + data.clients + " نافذة)!<br>";
-                        } else {
-                            log.innerHTML += "❌ [خطأ]: " + data.error + "<br>";
-                        }
-                        log.scrollTop = log.scrollHeight;
-                    }).catch(err => { alert('❌ خطأ في الاتصال'); });
                 }
             </script>
         </body>
@@ -348,30 +306,6 @@ app.post('/api/broadcast', (req, res) => {
             client.send(JSON.stringify(payload)); 
             count++;
         }
-    });
-    res.json({ success: true, clients: count });
-});
-
-app.post('/api/magic-split', (req, res) => {
-    const { targetPc, country, visaType, subType, category } = req.body;
-    const target = targetPc ? targetPc.toLowerCase() : "all";
-    let eligibleClients = [];
-    wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN && client.pcId && client.pcId !== "unknown") {
-            if (target === "all" || client.pcId === target) { eligibleClients.push(client); }
-        }
-    });
-    const numClients = eligibleClients.length;
-    if (numClients === 0) return res.json({ success: false, error: "لا يوجد متصفحات متصلة." });
-    let count = 0;
-    const half = Math.ceil(numClients / 2);
-    eligibleClients.forEach((client, index) => {
-        let assignedCity = (index < half) ? "Casablanca" : "Rabat"; 
-        client.send(JSON.stringify({
-            action: "CHANGE_PROFILE", 
-            country: country, city: assignedCity, visaType, subType, category
-        }));
-        count++;
     });
     res.json({ success: true, clients: count });
 });
@@ -413,6 +347,7 @@ wss.on('connection', (ws) => {
         } catch (e) {}
     });
 });
+
 setInterval(() => {
     wss.clients.forEach(client => {
         if (client.isAlive === false) return client.terminate(); 
