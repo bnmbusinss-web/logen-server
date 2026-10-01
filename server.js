@@ -53,10 +53,10 @@ app.get('/', (req, res) => {
                     <div class="subtitle" id="country-subtitle">Cloud Command Center - ES</div>
                 </header>
 
-                <!-- أزرار التبديل بين الدول -->
+               <!-- أزرار التبديل بين الدول -->
                 <div class="tabs-container">
-                    <div id="tab-pt" class="tab-btn tab-pt" onclick="switchCountry('PT')">🇵🇹 البرتغال PT</div>
                     <div id="tab-es" class="tab-btn tab-es active" onclick="switchCountry('ES')">🇪🇸 إسبانيا ES</div>
+                    <div id="tab-pt" class="tab-btn tab-pt" onclick="switchCountry('PT')">🇵🇹 البرتغال PT</div>
                 </div>
                 
                 <div class="stats" id="stats">📡 جاري الاتصال بالمتصفحات...</div>
