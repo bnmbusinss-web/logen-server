@@ -194,10 +194,12 @@ app.get('/', (req, res) => {
                         const lines = e.target.result.split(/\\r?\\n/).filter(line => line.trim() !== "");
                         lines.forEach(line => {
                             const parts = line.split(/[:,]/).map(s => s.trim());
-                            if (parts.length >= 2) {
+                            
+                            // 🔴 التعديل هنا: إسبانيا ستتمكن من قراءة الإيميل وحده حتى لو لم توجد كلمة سر
+                            if (parts.length >= 1 && parts[0] !== "") {
                                 window.uploadedAccounts.push({
                                     email: parts[0],
-                                    password: parts[1],
+                                    password: parts[1] || "", 
                                     appPassword: parts[2] || "",
                                     customCity: parts[3] || "" 
                                 });
